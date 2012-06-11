@@ -100,7 +100,7 @@ class sfBlog
 	 * @param string $post_body 	The post body
 	 * @param sfUser $post_author	The authot's sfUser (or derivative) object
 	 * @param string $category 		An optional category for separating blog posts
-	 * @return 
+	 * @return sfBlogPost 			The generated object
 	 */
 	public static function makePost($post_title, $post_body, sfUser $post_author, $category = NULL)
 	{
@@ -118,6 +118,9 @@ class sfBlog
 			$new_post->getAutoIncrementedValue(),
 			$post_body
 			);
+		$obj = sfCore::make('sfBlogPost');
+		$obj->load($new_post->getAutoIncrementedValue());
+		return $obj;
 	}
 }
 
@@ -148,7 +151,7 @@ class sfBlogPost
 	 * 
 	 * @param integer $id 		ID of blog post to fetch from the database
 	 */
-	public function __construct($id)
+	public function load($id)
 	{
 
 	}

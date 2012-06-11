@@ -20,6 +20,13 @@ class sfCore
 
 	public static $strict = false;
 
+	/**
+	 * The class listing, for extendibility
+	 */
+	public static $classes = Array(
+		'sfFileStorageItem' => 'sfFileStorageItem'
+	);
+
 	public static $db = NULL;
 	public static function attach(fDatabase $db)
 	{
@@ -59,6 +66,20 @@ class sfCore
 			}
 		}
 		self::$classes[$base_class] = $extension_class;
+	}
+
+	/**
+	 * Make an object of the requested class.
+	 * 
+	 * This automatically generates an extended class if defined. Constructors should NOT
+	 * have any arguments; instead, use a load() method to load basic properties.
+	 * 
+	 * @param string $class 	The class to make, will load extension if set
+	 * @return mixed 			The created object
+	 */
+	public static function make($class)
+	{
+		return new self::classes[$class];
 	}
 }
 

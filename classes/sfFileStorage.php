@@ -53,21 +53,6 @@ class sfFileStorage
 	}
 
 	/**
-	 * Extendibility features here.
-	 */
-	private static $file_class = 'sfFileStorageItem';
-	public static function setFileClass($class)
-	{
-		if(!class_exists($class)){
-			throw new fProgrammerException("Invalid file class set for sfFileStorage.");
-		}
-		if(!is_subclass_of($class, 'sfFileStorageItem')){
-			throw new fProgrammerException("File class for sfUsers must be a subclass of sfFileStorageItem.");
-		}
-		self::$file_class = $class;
-	}
-
-	/**
 	 * Upload a new file into storage. Extracts data from sfUsers as well.
 	 * 
 	 * @param string $field 			The form field name of the upload element
@@ -101,14 +86,16 @@ class sfFileStorage
 			"INSERT INTO `swoosh_file_storage` (
 				`id`, `filename`, `upload_date`, `upload_user`, `auth_requirement`, `downloads`) 
 			VALUES (
-				NULL, '%s', NOW(), '%i', '%i', '0');",
+				NULL, %s, NOW(), %i, %i, 0);",
 			$file->getName(),
 			$user,
 			$auth_requirement
 		);
 
 		// return item
-		$item = new self::$file_class($insert->getAutoIncrementedValue());
+		$item = sfCore::make('sfFileStorageItem');
+		$item->load($insert->getAutoIncrementedValue());
+		return $item;
 	}
 
 	/**
@@ -142,7 +129,7 @@ class sfFileStorageItem
 	 * 
 	 * @param integer $id 			The database ID of this item
 	 */
-	public function __construct($id)
+	public function load($id)
 	{
 		$search = sfCore::db->query("SELECT * FROM `swoosh_file_storage` WHERE `id`='%i' LIMIT 1", $id);
 		try{

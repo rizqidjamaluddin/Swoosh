@@ -25,21 +25,6 @@ class sfUsers {
 	}
 
 	/**
-	 * Extendibility features here.
-	 */
-	private static $user_class = 'sfUser';
-	public static function setUserClass($class)
-	{
-		if(!class_exists($class)){
-			throw new fProgrammerException("Invalid user class set for sfUsers.");
-		}
-		if(!is_subclass_of($class, 'sfUser')){
-			throw new fProgrammerException("User class for sfUsers must be a subclass of sfUser.");
-		}
-		self::$user_class = $class;
-	}
-
-	/**
 	 * Set user level structure. Automatically does the same to fAuthorization.
 	 * 
 	 * @param array $levels 	An associative array, similar to what flourish would use.
@@ -131,7 +116,9 @@ class sfUsers {
 		$new_user_data->setKey($key);
 		$new_user_data->store();
 
-		return new self::$user_class($new_user_data->getId());
+		$obj = fCore::make('sfUser');
+		$obj->load($new_user_data->getId());
+		return $obj;
 	}
 
 	/**
@@ -144,7 +131,9 @@ class sfUsers {
 	 */
 	public static function fetchUser($id)
 	{
-		return new self::$user_class($id);
+		$obj = fCore::make('sfUser');
+		$obj->load($id);
+		return $obj;
 	}
 
 	/**
@@ -157,7 +146,9 @@ class sfUsers {
 	 */
 	public static function fetchUserByUsername($username)
 	{
-		return new self::$user_class(array('username' => $username));
+		$obj = fCore::make('sfUser');
+		$obj->load(array('username' => $username));
+		return $obj;
 	}
 
 	/**
@@ -170,7 +161,9 @@ class sfUsers {
 	 */
 	public static function fetchUserByEmail($email)
 	{
-		return new self::$user_class(array('email' => $email));
+		$obj = fCore::make('sfUser');
+		$obj->load(array('email' => $email));
+		return $obj;
 	}
 
 
@@ -197,7 +190,8 @@ class sfUsers {
 	public static function login($username, $password)
 	{
 		try{
-			$login_attempt = new sfUser(array('username' => $username));
+			$login_attempt = sfCore::make('sfUser');
+			$login_attempt->load(array('username' => $username));
 		}catch(fNotFoundException $e){
 			throw new fNotFoundException();
 			return;
@@ -272,7 +266,8 @@ class sfUsers {
 	{
 		if(!isset(self::$current_user) && self::isLoggedIn())
 		{
-			self::$current_user = new sfUser(array('username' => self::$username));
+			self::$current_user = sfCore::make('sfUser');
+			self::$current_user->load(array('username' => self::$username));
 		}
 		return self::$current_user;
 	}
@@ -287,7 +282,7 @@ class sfUser {
 	protected $main_user_data;
 
 	// remember, only primary keys accepted (or ID column)
-	public function __construct($fActiveRecord_selector)
+	public function load($fActiveRecord_selector)
 	{
 
 		try{
