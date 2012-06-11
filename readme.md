@@ -1,1 +1,4 @@
-This is the shared dropbox-based repository.
+Swoosh
+======
+
+A middle-level library around the Flourish Library.
