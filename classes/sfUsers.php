@@ -256,6 +256,10 @@ class sfUsers {
 	 */
 	public static function getCurrentUser()
 	{
+		if(!isset(self::$current_user) && self::isLoggedIn())
+		{
+			self::$current_user = new sfUser(array('username' => self::$username));
+		}
 		return self::$current_user;
 	}
 
