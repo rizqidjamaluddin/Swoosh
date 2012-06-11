@@ -21,10 +21,14 @@ class sfCore
 	public static $strict = false;
 
 	/**
-	 * The class listing, for extendibility
+	 * The class listing, for extendibility. These are the non-static sub-classes used for
+	 * granular control, to allow users to define what sub-class an implemented class should 
+	 * generate.
 	 */
 	public static $classes = Array(
-		'sfFileStorageItem' => 'sfFileStorageItem'
+		'sfFileStorageItem' => 'sfFileStorageItem',
+		'sfUser' => 'sfUser',
+		'sfBlogPost' => 'sfBlogPost'
 	);
 
 	public static $db = NULL;
