@@ -235,7 +235,7 @@ class sfUsers {
 	 */
 	public static function isLoggedIn()
 	{
-		return self::$logged_in;
+		return fAuthorization::checkLoggedIn();
 	}
 
 	/**
@@ -268,7 +268,7 @@ class sfUser {
 
 	protected $main_user_data;
 
-	// remember, onlyy primary keys accepted (or ID column)
+	// remember, only primary keys accepted (or ID column)
 	public function __construct($fActiveRecord_selector)
 	{
 
