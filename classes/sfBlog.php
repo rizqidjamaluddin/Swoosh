@@ -76,10 +76,10 @@ class sfBlog
 	 * @param integer $post_id 			The requested post ID
 	 * @return sfBlogPost 				The blog post in object form
 	 */
-	 public static function getSinglePost($post_id)
-	 {
+	public static function getSinglePost($post_id)
+	{
 
-	 }
+	}
 
 	/**
 	 * Fetch pages per page based on a category.
