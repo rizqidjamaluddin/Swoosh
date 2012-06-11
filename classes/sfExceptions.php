@@ -23,4 +23,6 @@ class sfAuthorizationException extends fAuthorizationException {}
 class sfInvalidAuthException extends sfAuthorizationException {}
 class sfBycryptException extends sfAuthorizationException {}
 
+class sfNotFoundException extends fNotFoundException{}
+
 ?>
