@@ -248,6 +248,20 @@ class sfUsers {
 		return fAuthorization::getUserAuthLevel();
 	}
 
+	/**
+	 * Get current user's username.
+	 * 
+	 * @return string 		This user's username
+	 */
+	public static function getCurrentUsername()
+	{
+		if(self::isLoggedIn())
+		{
+			return fAuthorization::getUserToken();
+		}
+		return false;
+	}
+
 
 	/**
 	 * Get current user object.
