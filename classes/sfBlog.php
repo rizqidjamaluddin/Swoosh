@@ -94,13 +94,30 @@ class sfBlog
 	}
 
 	/**
+	 * Create a new blog post.
 	 * 
-	 * 
-	 * 
+	 * @param string $post_title 	The post title
+	 * @param string $post_body 	The post body
+	 * @param sfUser $post_author	The authot's sfUser (or derivative) object
+	 * @param string $category 		An optional category for separating blog posts
+	 * @return 
 	 */
-	public static function makePost($post_title, $post_body, $post_author)
+	public static function makePost($post_title, $post_body, sfUser $post_author, $category = NULL)
 	{
-
+		$new_post = sfCore::db->query("INSERT INTO `swoosh_blog_posts` (
+			`post_id`, `title`, `author_id`, `timestamp`, `category`, `comments_enabled`)
+			VALUES (
+				NULL, %s, %i, NOW(), %s, 1)",
+			$post_title,
+			$post_author->getId(),
+			$category
+			);
+		$post_body = sfCore::db->query("INSERT INTO `swoosh_blog_contents` (
+			`post_id`, `contents`)
+			VALUES (%i, %s)",
+			$new_post->getAutoIncrementedValue(),
+			$post_body
+			);
 	}
 }
 
