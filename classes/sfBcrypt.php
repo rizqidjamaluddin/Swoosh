@@ -11,6 +11,8 @@
  * 
  * @author Rizqi Djamaluddin <rizqidjamaluddin@gmail.com>
  * 
+ * @version 1
+ * 
  * @package Swoosh
  */
 
