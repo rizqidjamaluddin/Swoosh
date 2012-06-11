@@ -288,6 +288,11 @@ class sfUser {
 	 * Various getters and setters for built-in user parameters.
 	 */
 
+	public function getId()
+	{
+		return $this->main_user_data->getId();
+	}
+
 	public function getUsername()
 	{
 		return $this->main_user_data->getUsername();
