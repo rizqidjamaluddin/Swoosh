@@ -120,6 +120,17 @@ class sfPageCache
 	}
 
 	/**
+	 * Delete a particular page cache. Useful, for example, when updating a page.
+	 * 
+	 * @param string $identifier 	The cache identifier for this particular page
+	 */
+	public static function delete($identifier)
+	{
+		if(!self::$enabled){ return false; }
+		self::$cache->delete($identifier);
+	}
+
+	/**
 	 * Clear the entire cache, starting anew.
 	 */
 	public static function clear()
