@@ -260,7 +260,7 @@ class sfUsers {
 	/**
 	 * Get current user object.
 	 * 
-	 * @return sfUser 		The current user's object, for manual access
+	 * @return sfUser 		The current user's object, for manual access; returns false if not logged in
 	 */
 	public static function getCurrentUser()
 	{
@@ -268,8 +268,10 @@ class sfUsers {
 		{
 			self::$current_user = sfCore::make('sfUser');
 			self::$current_user->load(array('username' => self::$username));
+			return self::$current_user;
+		}else{
+			return false;
 		}
-		return self::$current_user;
 	}
 
 }
