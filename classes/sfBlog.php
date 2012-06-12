@@ -104,7 +104,7 @@ class sfBlog
 	 */
 	public static function makePost($post_title, $post_body, sfUser $post_author, $category = NULL)
 	{
-		$new_post = sfCore::db->query("INSERT INTO `swoosh_blog_posts` (
+		$new_post = sfCore::$db->query("INSERT INTO `swoosh_blog_posts` (
 			`post_id`, `title`, `author_id`, `timestamp`, `category`, `comments_enabled`)
 			VALUES (
 				NULL, %s, %i, NOW(), %s, 1)",
@@ -112,7 +112,7 @@ class sfBlog
 			$post_author->getId(),
 			$category
 			);
-		$post_body = sfCore::db->query("INSERT INTO `swoosh_blog_contents` (
+		$post_body = sfCore::$db->query("INSERT INTO `swoosh_blog_contents` (
 			`post_id`, `contents`)
 			VALUES (%i, %s)",
 			$new_post->getAutoIncrementedValue(),
