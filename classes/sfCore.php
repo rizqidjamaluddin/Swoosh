@@ -83,7 +83,8 @@ class sfCore
 	 */
 	public static function make($class)
 	{
-		return new self::classes[$class];
+		$obj = self::$classes[$class];
+		return new $obj();
 	}
 }
 
