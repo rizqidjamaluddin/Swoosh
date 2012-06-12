@@ -401,6 +401,11 @@ class sfUser {
 		return true;
 	}
 
+	public function __toString()
+	{
+		return $this->getId();
+	}
+
 }
 
 class sfUserData extends fActiveRecord

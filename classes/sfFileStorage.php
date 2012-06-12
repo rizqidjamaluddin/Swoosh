@@ -77,9 +77,6 @@ class sfFileStorage
 		}
 
 		$user = sfUser::getCurrentUser();
-		if(!$user){
-			$user = NULL;
-		}
 
 		// insert data to database
 		$insert = sfCore::db->query(
@@ -88,7 +85,7 @@ class sfFileStorage
 			VALUES (
 				NULL, %s, NOW(), %i, %i, 0);",
 			$file->getName(),
-			$user,
+			$user->getId(),
 			$auth_requirement
 		);
 
