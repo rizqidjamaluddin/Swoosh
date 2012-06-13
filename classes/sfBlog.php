@@ -151,7 +151,9 @@ class sfBlogPost
 	 * This automatically loads in all necessary data into the main protected variables.
 	 * Any additional data can later be pulled in through attributes.
 	 * 
-	 * @param integer $id 		ID of blog post to fetch from the database
+	 * @throws sfNotFoundException		If no blog post with this ID is found
+	 * 
+	 * @param integer $id 				ID of blog post to fetch from the database
 	 */
 	public function load($id)
 	{
