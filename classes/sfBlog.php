@@ -69,6 +69,21 @@ class sfBlog
 	{
 
 	}
+
+	/**
+	 * Fetch a post based on its slug (permalink string).
+	 * 
+	 * @throws sfNotFoundException 		If no post with this slug is found
+	 * 
+	 * @param string $slug 				The requested post's slug
+	 * @return sfBlogPost 				The blog post in object form
+	 */
+	public static function getSingePostFromSlug($slug)
+	{
+
+
+
+	}
 	
 	/**
 	 * Fetch a single post.
