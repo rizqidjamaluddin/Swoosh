@@ -161,11 +161,19 @@ class sfBlogPost
 	*/
 
 	protected $id;
+	protected $slug;
 
 	protected $title;
 	protected $author_id;
-	protected $body;
 	protected $timestamp;
+	protected $category;
+	protected $comments_enabled;
+
+	/**
+	 * These are lazy-loaded upon request.
+	 */
+	protected $author;
+	protected $body;
 
 	protected $attributes = Array();
 
@@ -173,7 +181,8 @@ class sfBlogPost
 	 * Create a blog post object.
 	 * 
 	 * This automatically loads in all necessary data into the main protected variables.
-	 * Any additional data can later be pulled in through attributes.
+	 * Any additional data can later be pulled in through attributes. Blog post bodies are
+	 * NOT fetched automatically.
 	 * 
 	 * @throws sfNotFoundException		If no blog post with this ID is found
 	 * 
@@ -181,7 +190,21 @@ class sfBlogPost
 	 */
 	public function load($id)
 	{
+		$result = fCore::$db->query("SELECT * FROM `swoosh_blog_posts` WHERE `id`=%i LIMIT 1", $id);
+		try{
+			$result->throwIfNoRows();
+		}catch(fNoRowsExcpetion $e){
+			throw new sfNotFoundException();
+		}
 
+		$data = $result->fetchRow();
+		$this->id = $id;
+		$this->title = $data['title'];
+		$this->author_id = $data['author_id'];
+		$this->timestamp = $data['timestamp'];
+		$this->category = $data['category'];
+		$this->comments_enabled = $data['comments_enabled'];
+		$this->slug = $data['slug'];
 	}
 
 	/**
