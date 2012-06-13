@@ -98,21 +98,30 @@ class sfBlog
 	/**
 	 * Create a new blog post.
 	 * 
+	 * @throws sfInvalidException 	If a post with this slug already exists
+	 * 
+	 * @param string $post_slug 	The post slug (permalink)
 	 * @param string $post_title 	The post title
 	 * @param string $post_body 	The post body
 	 * @param sfUser $post_author	The authot's sfUser (or derivative) object
 	 * @param string $category 		An optional category for separating blog posts
 	 * @return sfBlogPost 			The generated object
 	 */
-	public static function makePost($post_title, $post_body, sfUser $post_author, $category = NULL)
+	public static function makePost($slug, $post_title, $post_body, sfUser $post_author, $category = NULL)
 	{
+		$slug_check = sfCore::$db->query("SELECT count(*) FROM `swossh_blog_posts` WHERE `slug` = %s LIMIT 1;");
+		if($slug_check->fetchScalar() == 1)
+		{
+			throw new sfInvalidException(array('slug' => sfInvalidException::EXISTING));
+		}
 		$new_post = sfCore::$db->query("INSERT INTO `swoosh_blog_posts` (
-			`post_id`, `title`, `author_id`, `timestamp`, `category`, `comments_enabled`)
+			`post_id`, `title`, `author_id`, `timestamp`, `category`, `comments_enabled`, `slug`)
 			VALUES (
-				NULL, %s, %i, NOW(), %s, 1)",
+				NULL, %s, %i, NOW(), %s, 1, %s)",
 			$post_title,
 			$post_author->getId(),
-			$category
+			$category,
+			$slug
 			);
 		$post_body = sfCore::$db->query("INSERT INTO `swoosh_blog_contents` (
 			`post_id`, `contents`)
