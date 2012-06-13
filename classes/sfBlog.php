@@ -78,7 +78,9 @@ class sfBlog
 	 */
 	public static function getSinglePost($post_id)
 	{
-
+		$post = sfCore::make('sfBlogPost');
+		$post->load($post_id);
+		return $post;
 	}
 
 	/**
