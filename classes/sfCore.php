@@ -15,6 +15,9 @@ function __autoload($class_name)
     throw new Exception('The class ' . $class_name . ' could not be loaded');
 }
 
+/**
+ * @version 1
+ */
 class sfCore
 {
 
