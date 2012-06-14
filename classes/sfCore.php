@@ -24,11 +24,14 @@ class sfCore
 	public static $strict = false;
 
 	/**
-	 * The class listing, for extendibility. These are the non-static sub-classes used for
+	 * The class listing, for extendibility. Some of these are the non-static sub-classes used for
 	 * granular control, to allow users to define what sub-class an implemented class should 
-	 * generate.
+	 * generate. Others are fully-fledged classes, used when a class is referring to another.
 	 */
 	public static $classes = Array(
+		'sfUsers' => 'sfUsers',
+		'sfBlog' => 'sfBlog',
+
 		'sfFileStorageItem' => 'sfFileStorageItem',
 		'sfUser' => 'sfUser',
 		'sfBlogPost' => 'sfBlogPost'
@@ -88,6 +91,21 @@ class sfCore
 	{
 		$obj = self::$classes[$class];
 		return new $obj();
+	}
+
+	/**
+	 * Get a reference to a static class.
+	 * 
+	 * Similar to make(), except this doesn't create a new object. When any internal class
+	 * wants to refer to another, it should use this instead of an explicit call. This allows
+	 * users to extend behavior, and any calling classes would use those extensions instead.
+	 * 
+	 * @param string $class 	The static class to get
+	 * @return string 			The class name
+	 */
+	public static function getClass($class)
+	{
+		return self::$classes[$class];
 	}
 }
 
