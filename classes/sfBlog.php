@@ -69,6 +69,21 @@ class sfBlog
 	{
 
 	}
+
+	/**
+	 * Fetch a post based on its slug (permalink string).
+	 * 
+	 * @throws sfNotFoundException 		If no post with this slug is found
+	 * 
+	 * @param string $slug 				The requested post's slug
+	 * @return sfBlogPost 				The blog post in object form
+	 */
+	public static function getSinglePostFromSlug($slug)
+	{
+		$post = sfCore::make('sfBlogPost');
+		$post->loadFromQuery(sfCore::$db->query("SELECT * FROM `swoosh_blog_posts` WHERE `slug`=%s LIMIT 1", $slug));
+		return $post;
+	}
 	
 	/**
 	 * Fetch a single post.
@@ -78,7 +93,9 @@ class sfBlog
 	 */
 	public static function getSinglePost($post_id)
 	{
-
+		$post = sfCore::make('sfBlogPost');
+		$post->load($post_id);
+		return $post;
 	}
 
 	/**
@@ -96,21 +113,30 @@ class sfBlog
 	/**
 	 * Create a new blog post.
 	 * 
+	 * @throws sfInvalidException 	If a post with this slug already exists
+	 * 
+	 * @param string $post_slug 	The post slug (permalink)
 	 * @param string $post_title 	The post title
 	 * @param string $post_body 	The post body
 	 * @param sfUser $post_author	The authot's sfUser (or derivative) object
 	 * @param string $category 		An optional category for separating blog posts
 	 * @return sfBlogPost 			The generated object
 	 */
-	public static function makePost($post_title, $post_body, sfUser $post_author, $category = NULL)
+	public static function makePost($slug, $post_title, $post_body, sfUser $post_author, $category = NULL)
 	{
+		$slug_check = sfCore::$db->query("SELECT count(*) FROM `swossh_blog_posts` WHERE `slug` = %s LIMIT 1;");
+		if($slug_check->fetchScalar() == 1)
+		{
+			throw new sfInvalidException(array('slug' => sfInvalidException::EXISTING));
+		}
 		$new_post = sfCore::$db->query("INSERT INTO `swoosh_blog_posts` (
-			`post_id`, `title`, `author_id`, `timestamp`, `category`, `comments_enabled`)
+			`post_id`, `title`, `author_id`, `timestamp`, `category`, `comments_enabled`, `slug`)
 			VALUES (
-				NULL, %s, %i, NOW(), %s, 1)",
+				NULL, %s, %i, NOW(), %s, 1, %s)",
 			$post_title,
 			$post_author->getId(),
-			$category
+			$category,
+			$slug
 			);
 		$post_body = sfCore::$db->query("INSERT INTO `swoosh_blog_contents` (
 			`post_id`, `contents`)
@@ -135,11 +161,19 @@ class sfBlogPost
 	*/
 
 	protected $id;
+	protected $slug;
 
 	protected $title;
 	protected $author_id;
-	protected $body;
 	protected $timestamp;
+	protected $category;
+	protected $comments_enabled;
+
+	/**
+	 * These are lazy-loaded upon request.
+	 */
+	protected $author;
+	protected $body;
 
 	protected $attributes = Array();
 
@@ -147,29 +181,73 @@ class sfBlogPost
 	 * Create a blog post object.
 	 * 
 	 * This automatically loads in all necessary data into the main protected variables.
-	 * Any additional data can later be pulled in through attributes.
+	 * Any additional data can later be pulled in through attributes. Blog post bodies are
+	 * NOT fetched automatically.
 	 * 
-	 * @param integer $id 		ID of blog post to fetch from the database
+	 * @throws sfNotFoundException		If no blog post with this ID is found
+	 * 
+	 * @param integer $id 				ID of blog post to fetch from the database
 	 */
 	public function load($id)
 	{
+		$result = sfCore::$db->query("SELECT * FROM `swoosh_blog_posts` WHERE `id`=%i LIMIT 1", $id);
+		$this->loadFromQuery($result);
+	}
+	
+	/**
+	 * Create a blog post object from a finished fDatabase query. This is the actual "core"
+	 * load function; the load() method itself is simply a wrapper, as load functions are
+	 * expected to accept an identifier.
+	 *
+	 * @throws sfNotFoundException 		If no blog post is found as per the query result
+	 *
+	 * @param fResult $query_result 	Completed fDatabase query call
+	 */
+	public function loadFromQuery(fResult $query_result)
+	{
+		try{
+			$query_result->throwIfNoRows();
+		}catch(fNoRowsExcpetion $e){
+			throw new sfNotFoundException();
+		}
 
+		$data = $query_result->fetchRow();
+		$this->id = $id;
+		$this->title = $data['title'];
+		$this->author_id = $data['author_id'];
+		$this->timestamp = $data['timestamp'];
+		$this->category = $data['category'];
+		$this->comments_enabled = $data['comments_enabled'];
+		$this->slug = $data['slug'];
 	}
 
 	/**
 	 * Get comments associated with this post.
 	 * 
+	 * Instead of using sfBlogComment's native load function, this invokes the non-querying
+	 * loadFromObject method. By passing a stdClass object, sfBlogComment doesn't need to send
+	 * another query via the database.
+	 *
 	 * @return array 		An array of sfBlogComment objects
 	 */
 	public function getComments()
 	{
 		$comments = Array();
-		$result = sfCore::$db->query();
+		$result = sfCore::$db->query("SELECT * FROM `swoosh_blog_comments` WHERE `post_id`=%i", $this->id)->asObjects();
+		foreach($comment in $result)
+		{
+			$obj = sfCore::make('sfBlogComment');
+			$obj->loadFromObject($comment);
+			$comments[] = $obj;
+		}
+		return $comments;
 	}
 }
 
 class sfBlogComment
 {
+	protected $id;
+
 	protected $swoosh_user = false;
 	protected $author;
 	protected $timetamp;
@@ -181,9 +259,22 @@ class sfBlogComment
 	 * 
 	 * @param integer $comment_id 	ID of comment to fetch
 	 */
-	public function __construct($comment_id)
+	public function load($comment_id)
 	{
 
+	}
+	
+	/**
+	 * Create a blog comment object based on an stdClass object.
+	 *
+	 * Note that this is an unvalidated comment; this function doesn't guarantee that this comment
+	 * actually exists. 
+	 *
+	 * @param stdClass $comment_data 	The comment's raw data
+	 */
+	 public function loadFromObject($comment_data)
+	{
+	
 	}
 
 }
