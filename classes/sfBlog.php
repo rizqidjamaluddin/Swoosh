@@ -67,7 +67,23 @@ class sfBlog
 	 */
 	public static function getPosts($page = 1)
 	{
-
+		
+		$adjusted_page = $page - 1;
+		$array = Array();
+		$posts = sfCore::$db->query("SELECT * FROM `swoosh_blog_posts` LIMIT %i, %i;",
+			$adjusted_page * self::$posts_per_page, self::$posts_per_page)->asObjects();	
+		try{
+			$posts->throwIfNoRows();
+		}catch(fNoRowsException $e){
+			throw new sfNotFoundException();
+		}
+		foreach($posts as $post)
+		{
+			$new = sfCore::make('sfBlogPost');
+			$new->loadFromObject($post);
+			$array[] = $new;
+		}
+		return $array;
 	}
 
 	/**
@@ -100,6 +116,8 @@ class sfBlog
 
 	/**
 	 * Fetch pages per page based on a category.
+	 *
+	 * @throws sfNotFoundException 	If no posts were found
 	 * 
 	 * @param string $category 		Category to filter by
 	 * @param integer $page 		Page to fetch
@@ -107,7 +125,22 @@ class sfBlog
 	 */
 	public static function getPostsByCategory($category, $page = 1)
 	{
-		
+		$adjusted_page = $page - 1;
+		$array = Array();
+		$posts = sfCore::$db->query("SELECT * FROM `swoosh_blog_posts` WHERE `category`=%s LIMIT %i, %i;",
+			$category, $adjusted_page * self::$posts_per_page, self::$posts_per_page)->asObjects();	
+		try{
+			$posts->throwIfNoRows();
+		}catch(fNoRowsException $e){
+			throw new sfNotFoundException();
+		}
+		foreach($posts as $post)
+		{
+			$new = sfCore::make('sfBlogPost');
+			$new->loadFromObject($post);
+			$array[] = $new;
+		}
+		return $array;
 	}
 
 	/**
