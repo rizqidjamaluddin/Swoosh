@@ -78,7 +78,7 @@ class sfBlog
 	 * @param string $slug 				The requested post's slug
 	 * @return sfBlogPost 				The blog post in object form
 	 */
-	public static function getSingePostFromSlug($slug)
+	public static function getSinglePostFromSlug($slug)
 	{
 		$post = sfCore::make('sfBlogPost');
 		$post->loadFromQuery(sfCore::$db->query("SELECT * FROM `swoosh_blog_posts` WHERE `slug`=%s LIMIT 1", $slug));
@@ -273,9 +273,9 @@ class sfBlogComment
 	 * @param stdClass $comment_data 	The comment's raw data
 	 */
 	 public function loadFromObject($comment_data)
-	 {
-	 
-	 }
+	{
+	
+	}
 
 }
 
