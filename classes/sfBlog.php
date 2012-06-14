@@ -242,11 +242,115 @@ class sfBlogPost
 		}
 		return $comments;
 	}
+	
+	/**
+	 * The expected slew of getters and setters.
+	 */
+	public function getCategory()
+	{
+		return $this->category;
+	}
+	
+	public function setCategory($category)
+	{
+		return sfCore::$db->query("UPDATE `swoosh_blog_posts` SET `category`=%s WHERE `id`=%i", $category, $this->id);
+	}
+	
+	public function getTitle()
+	{
+		return $this->title;
+	}
+	
+	public function setTitle($title)
+	{
+		return sfCore::$db->query("UPDATE `swoosh_blog_posts` SET `title`=%s WHERE `id`=%i", $title, $this->id);
+	}
+	
+	public function getCommentsEnabled()
+	{
+		return $this->comments_enabled;
+	}
+	
+	public function setCommentsEnabled($bool)
+	{
+		return sfCore::$db->query("UPDATE `swoosh_blog_posts` SET `comments_enabled`=%b WHERE `id`=%i", $bool, $this->id);
+	}
+	
+	public function getTimetamp()
+	{
+		return $this->timestamp;
+	}
+	
+	/**
+	 * Get this post's body; will load body if it hasn't been requested.
+	 */
+	public function getBody()
+	{
+		if(!isset($this->body))
+		{
+			return $this->loadBody();
+		}else{
+			return $this->body;
+		}
+	}
+	
+	/**
+	 * Directly loads this post's body. It will refresh it if called twice.
+	 *
+	 * @throws sfNotFoundException 	If this data is unavailable
+	 *
+	 * @return string 				The post body
+	 */
+	public function loadBody()
+	{
+		$result = sfCore::$db->query("SELECT `content` FROM `swoosh_blog_contents` WHERE `post_id`=%i", $this->id);
+		try{
+			$result->tossIfNoRows();
+		}catch(fNoRowsException $e){
+			throw new sfNotFoundException();
+		}	
+		$this->body = $result->fetchScalar();
+		return $this->body;
+	}
+	
+	public function setBody($body)
+	{
+		return sfCore::$db->query("UPDATE `swoosh_blog_contents` SET `content`=%s WHERE `post_id`=%i", $body, $this->id);
+	}
+	
+	/**
+	 * Get this post's author; will create a sfUser object if one hasn't been prepared.
+	 */
+	public function getAuthor()
+	{
+		if(!isset($this->author)){
+			return $this->loadAuthor();
+		}else{
+			return $this->author;
+		}
+	}
+	 
+	/**
+	 * Load and cache this post's author as a sfUser object.
+	 *
+	 */
+	public function loadAuthor()
+	{
+		
+	}
+	  
+	public function setAuthor(sfUser $author)
+	{
+	 
+	}
+	
+	
 }
 
 class sfBlogComment
 {
 	protected $id;
+	protected $parent;
 
 	protected $swoosh_user = false;
 	protected $author;
