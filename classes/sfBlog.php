@@ -80,9 +80,9 @@ class sfBlog
 	 */
 	public static function getSingePostFromSlug($slug)
 	{
-
-
-
+		$post = sfCore::make('sfBlogPost');
+		$post->loadFromQuery(sfCore::$db->query("SELECT * FROM `swoosh_blog_posts` WHERE `slug`=%s LIMIT 1", $slug));
+		return $post;
 	}
 	
 	/**
