@@ -224,17 +224,30 @@ class sfBlogPost
 	/**
 	 * Get comments associated with this post.
 	 * 
+	 * Instead of using sfBlogComment's native load function, this invokes the non-querying
+	 * loadFromObject method. By passing a stdClass object, sfBlogComment doesn't need to send
+	 * another query via the database.
+	 *
 	 * @return array 		An array of sfBlogComment objects
 	 */
 	public function getComments()
 	{
 		$comments = Array();
-		$result = sfCore::$db->query();
+		$result = sfCore::$db->query("SELECT * FROM `swoosh_blog_comments` WHERE `post_id`=%i", $this->id)->asObjects();
+		foreach($comment in $result)
+		{
+			$obj = sfCore::make('sfBlogComment');
+			$obj->loadFromObject($comment);
+			$comments[] = $obj;
+		}
+		return $comments;
 	}
 }
 
 class sfBlogComment
 {
+	protected $id;
+
 	protected $swoosh_user = false;
 	protected $author;
 	protected $timetamp;
