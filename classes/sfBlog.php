@@ -190,14 +190,28 @@ class sfBlogPost
 	 */
 	public function load($id)
 	{
-		$result = fCore::$db->query("SELECT * FROM `swoosh_blog_posts` WHERE `id`=%i LIMIT 1", $id);
+		$result = sfCore::$db->query("SELECT * FROM `swoosh_blog_posts` WHERE `id`=%i LIMIT 1", $id);
+		$this->loadFromQuery($result);
+	}
+	
+	/**
+	 * Create a blog post object from a finished fDatabase query. This is the actual "core"
+	 * load function; the load() method itself is simply a wrapper, as load functions are
+	 * expected to accept an identifier.
+	 *
+	 * @throws sfNotFoundException 		If no blog post is found as per the query result
+	 *
+	 * @param fResult $query_result 	Completed fDatabase query call
+	 */
+	public function loadFromQuery(fResult $query_result)
+	{
 		try{
-			$result->throwIfNoRows();
+			$query_result->throwIfNoRows();
 		}catch(fNoRowsExcpetion $e){
 			throw new sfNotFoundException();
 		}
 
-		$data = $result->fetchRow();
+		$data = $query_result->fetchRow();
 		$this->id = $id;
 		$this->title = $data['title'];
 		$this->author_id = $data['author_id'];
