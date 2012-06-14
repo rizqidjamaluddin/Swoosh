@@ -232,6 +232,8 @@ class sfBlogPost
 	 * load function; the load() method itself is simply a wrapper, as load functions are
 	 * expected to accept an identifier.
 	 *
+	 * This function in and of itself is simply a wrapper to loadFromObject.
+	 *
 	 * @throws sfNotFoundException 		If no blog post is found as per the query result
 	 *
 	 * @param fResult $query_result 	Completed fDatabase query call
@@ -243,15 +245,27 @@ class sfBlogPost
 		}catch(fNoRowsExcpetion $e){
 			throw new sfNotFoundException();
 		}
-
+		$query_result = $query_result->asObjects();
 		$data = $query_result->fetchRow();
-		$this->id = $id;
-		$this->title = $data['title'];
-		$this->author_id = $data['author_id'];
-		$this->timestamp = $data['timestamp'];
-		$this->category = $data['category'];
-		$this->comments_enabled = $data['comments_enabled'];
-		$this->slug = $data['slug'];
+		$this->loadFromObject($data);
+	}
+	
+	/**
+	 * Create a blog post from a raw stdClass object. Note that this does not actually ensure
+	 * that a post by this data exists; it is up to a calling function to guarantee this.
+	 *
+	 * 
+	 * @param stdClass $post_object 	Raw object containing details of this post
+	 */
+	public function loadFromObject(stdClass $post_object)
+	{
+		$this->id = $post_object->id;
+		$this->title = $post_object->title;
+		$this->author_id = $post_object->author_id;
+		$this->timestamp = $post_object->timestamp;
+		$this->category = $post_object->category;
+		$this->comments_enabled = $post_object->comments_enabled;
+		$this->slug = $post_object->slug;
 	}
 
 	/**
