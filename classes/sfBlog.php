@@ -383,12 +383,8 @@ class sfBlogPost
 	 */
 	public function loadAuthor()
 	{
-		
-	}
-	  
-	public function setAuthor(sfUser $author)
-	{
-	 
+		$sfUsers = sfCore::getClass('sfUsers');
+		return $sfUsers::fetchUser($this->author_id);
 	}
 	
 	
