@@ -172,7 +172,7 @@ class sfBlog
 			$slug
 			);
 		$post_body = sfCore::$db->query("INSERT INTO `swoosh_blog_contents` (
-			`post_id`, `contents`)
+			`post_id`, `content`)
 			VALUES (%i, %s)",
 			$new_post->getAutoIncrementedValue(),
 			$post_body
@@ -281,7 +281,7 @@ class sfBlogPost
 	{
 		$comments = Array();
 		$result = sfCore::$db->query("SELECT * FROM `swoosh_blog_comments` WHERE `post_id`=%i", $this->id)->asObjects();
-		foreach($comment in $result)
+		foreach($result as $comment)
 		{
 			$obj = sfCore::make('sfBlogComment');
 			$obj->loadFromObject($comment);
@@ -423,7 +423,7 @@ class sfBlogComment
 	 *
 	 * @param stdClass $comment_data 	The comment's raw data
 	 */
-	 public function loadFromObject($comment_data)
+	public function loadFromObject($comment_data)
 	{
 	
 	}
