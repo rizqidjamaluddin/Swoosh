@@ -70,13 +70,15 @@ class sfFileStorage
 		$upload->setMIMETypes(self::$MIME_types);
 		$file = $upload->move(self::$directory, $field);
 
+		$sfUsers = sfCore::getClass('sfUsers');
+
 		// attempt to define a non 0-100 integer auth level
 		if(!is_int($auth_requirement) || $auth_requirement < 0 || $auth_requirement > 100)
 		{
-			$auth_requirement = sfUsers::translateAuthLevelString($auth_requirement);
+			$auth_requirement = $sfUsers::translateAuthLevelString($auth_requirement);
 		}
 
-		$user = sfUser::getCurrentUser();
+		$user = $sfUsers::getCurrentUser();
 
 		// insert data to database
 		$insert = sfCore::db->query(
@@ -151,9 +153,10 @@ class sfFileStorageItem
 	 */
 	public function download()
 	{
+		$sfUsers = sfCore::getClass('sfUsers');
 		if($this->auth_requirement != 0)
 		{
-			if(sfUsers::translateAuthLevelString(sfUsers::getUserAuthLevel()) < $this->auth_requirement)
+			if($sfUsers::translateAuthLevelString($sfUsers::getUserAuthLevel()) < $this->auth_requirement)
 			{
 				throw new sfAuthorizationException();
 			}
@@ -182,7 +185,8 @@ class sfFileStorageItem
 	 */
 	public function getUploader()
 	{
-		return sfUsers::fetchUser($this->uploader);
+		$sfUsers = sfCore::getClass('sfUsers');
+		return $sfUsers::fetchUser($this->uploader);
 	}
 
 	/**
@@ -206,7 +210,8 @@ class sfFileStorageItem
 	 */
 	public function getAuthRequirement()
 	{
-		return sfUsers::translateAuthLevelInteger($this->auth_requirement);
+		$sfUsers = sfCore::getClass('sfUsers');
+		return $sfUsers::translateAuthLevelInteger($this->auth_requirement);
 	}
 
 	/**
@@ -216,7 +221,8 @@ class sfFileStorageItem
 	 */
 	public function setAuthRequirement($auth)
 	{
-		$auth_requirement = sfUsers::translateAuthLevelString($auth);
+		$sfUsers = sfCore::getClass('sfUsers');
+		$auth_requirement = $sfUsers::translateAuthLevelString($auth);
 		sfCore::db->query("UPDATE `swoosh_file_storage` SET `auth_requirement`='%i' WHERE `id` = '%i' LIMIT 1;",
 			$auth_requirement,
 			$this->id);
