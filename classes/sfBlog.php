@@ -232,10 +232,23 @@ class sfBlogComment
 	 * 
 	 * @param integer $comment_id 	ID of comment to fetch
 	 */
-	public function __construct($comment_id)
+	public function load($comment_id)
 	{
 
 	}
+	
+	/**
+	 * Create a blog comment object based on an stdClass object.
+	 *
+	 * Note that this is an unvalidated comment; this function doesn't guarantee that this comment
+	 * actually exists. 
+	 *
+	 * @param stdClass $comment_data 	The comment's raw data
+	 */
+	 public function loadFromObject($comment_data)
+	 {
+	 
+	 }
 
 }
 
