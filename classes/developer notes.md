@@ -3,9 +3,9 @@ worked, and some random bits of knowledge which may be useful in future code. Th
 developer scratchpad.
 
 
-= Flourish Optimizations =
+# Flourish Optimizations
 
-== fDatabase ==
+## fDatabase
 
 Since I decided to let Swoosh run on just MySQL, that simplified things a lot.
 
@@ -14,7 +14,7 @@ MySQL will always use one of these drivers, in descending priority:
 - pdo_mysql
 - mysql
 
-*Unescaping data is rarely unnecessary.* Since we're running on MySQL here, pretty much everything
+**Unescaping data is rarely unnecessary.** Since we're running on MySQL here, pretty much everything
 is ready to go from scratch. To be exact, only the Blob type may need unescaping, and even then,
 that's only if you're using the PDO driver. This still needs testing, but everything else doesn't
 need unescaping at all:
