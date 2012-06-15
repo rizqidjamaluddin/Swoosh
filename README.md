@@ -1,7 +1,7 @@
 Swoosh
 ======
 
-A PHP un-framework for developers who like doing things their way, built on Swoosh.
+A PHP un-framework for developers who like doing things their way, built on Flourish.
 
 Please note that Swoosh is currently in pre-pre-alpha. I don't even guarantee that it will run at
 all. It's in a state of rapid development; ***I do not suggest using it in any production
