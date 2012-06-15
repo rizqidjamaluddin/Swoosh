@@ -13,7 +13,7 @@ like Flourish, you may also like Swoosh!
 
 ## Database
 
-Unlike Flourish, Swoosh **uses a built-in database**. This store all the data tied to Swoosh
+Unlike Flourish, Swoosh **uses a built-in database**. This stores all the data tied to Swoosh
 features. Installation will be made possible manually (through a SQL file), or, later, through
 an automated mechanism.
 
@@ -40,13 +40,15 @@ commands. More on this later in complete documentation.
 
 ## Extending 
 
-Yes, *Swoosh allows you to modify each and every aspect of what it does*. You can mold it to do
+Yes, **Swoosh allows you to modify each and every aspect of what it does**. You can mold it to do
 whatever you want it to.
 
 Swoosh doesn't like the confabulated "hooks" model of "plug-ins." We're *developers* here - we
 already have a way to extend functionality: we *extend* classes.
 
 Simply extend a class as such:
+
+```php
  <?php
  class myBlog extends sfBlog {
  	public static function makePost($params){
@@ -56,13 +58,17 @@ Simply extend a class as such:
  	}
  }
  ?>
+```
 
 And later on in your code, simply call your own function instead of Swoosh's!
 
 There's just one more step:
+
+```php
  <?php
  sfCore::extend('sfBlog', 'myBlog');
  ?>
+```
 
 This tells Swoosh that you're extending the sfBlog class. This way, whenever any part of Swoosh
 is trying to contact sfBlog, it'll contact your class instead. This also works for generated
