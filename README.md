@@ -1,7 +1,7 @@
 Swoosh
 ======
 
-A middle-level library around the Flourish Library.
+A PHP un-framework for developers who like doing things their way, built on Swoosh.
 
 Please note that Swoosh is currently in pre-pre-alpha. I don't even guarantee that it will run at
 all. It's in a state of rapid development; ***I do not suggest using it in any production
@@ -10,6 +10,26 @@ projects yet.***
 This is merely a snapshot to get an idea of what Swoosh can do, and if it's the right un-framework
 for you. See also: [Flourish](http://flourishlib.com), the framework that Swoosh lives upon. If you
 like Flourish, you may also like Swoosh!
+
+## A Quick Intro
+
+Swoosh is a PHP un-framework: **it's a collection of scripts and tools to help you get your work done
+faster and safer**, *without having to adapt* to a library's personal style. It leaves nothing up
+to "magic"; it gives you control.
+
+Swoosh gives you the tools you need to make the basics of any website:
+
+* Users - sign up, login, edit data, programmtically, safely
+* A blog system - with comments, perfect for blogs and news
+* Page caching - and you stay in control of how, where and when it works
+* File storage - let your clients upload their files, serve downloads
+* Photo storage - crop, watermark, resize, whatever your images
+
+Of note: **Swoosh does not have any views or routers**. It is *not* a content management system. 
+It simply gives you a programmatic way to do this *straight from your code*. You write your PHP
+code as you like it, using any software and libraries you like - just, instead of writing a
+database query, sanitizing it, managing sessions, and re-doing a user system all on your own, you 
+call ``sfUsers::login()``.
 
 ## Database
 
@@ -20,6 +40,7 @@ an automated mechanism.
 ## Requirements
 
 Swoosh requires:
+* [Flourish](http://flourishlib.com)
 * PHP 5.3.0 or later
 * MySQL is the only supported database driver
 
