@@ -67,7 +67,7 @@ class sfUsers {
 			throw new sfInvalidAuthException();
 		}
 		return self::$levels[$level];
-	}
+	}	
 
 
 	/**
@@ -278,9 +278,6 @@ class sfUsers {
 
 class sfUser {
 
-	// extendibility
-	protected $sfClass = 'sfUsers';
-
 	protected $main_user_data;
 
 	// remember, only primary keys accepted (or ID column)
@@ -311,7 +308,8 @@ class sfUser {
 
 	public function getLevel()
 	{
-		return $sfClass::translateAuthLevelInteger($this->main_user_data->getLevel());
+		$sfUsers = sfCore::getClass('sfUsers');
+		return $sfUsers::translateAuthLevelInteger($this->main_user_data->getLevel());
 	}
 
 	/**
@@ -322,7 +320,8 @@ class sfUser {
 	 */
 	public function setLevel($level)
 	{	
-		$this->main_user_data->setLevel($sfClass::translateAuthLevelStribg($level));
+		$sfUsers = sfCore::getClass('sfUsers');
+		$this->main_user_data->setLevel($sfUsers::translateAuthLevelString($level));
 		$this->main_user_data->store();
 		return $level;
 
