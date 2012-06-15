@@ -396,10 +396,15 @@ class sfBlogComment
 	protected $parent;
 
 	protected $swoosh_user = false;
-	protected $author;
+	protected $author_id;
 	protected $timetamp;
 	protected $email;
 	protected $body;
+
+	protected $anonymous_name = NULL;
+	protected $anonymous_email = NULL;
+
+	protected $author;
 
 	/**
 	 * Create a blog comment object.
@@ -419,9 +424,21 @@ class sfBlogComment
 	 *
 	 * @param stdClass $comment_data 	The comment's raw data
 	 */
-	public function loadFromObject($comment_data)
+	public function loadFromObject(stdClass $comment_data)
 	{
-	
+		$this->id = $comment_data->comment_id;
+		$this->parent = $comment_data->post_id;
+		$this->timestamp = $comment_data->timestamp;
+
+		if($comment_data->is_authorized){
+			$this->$swoosh_user = true;
+			$this->author_id = $comment_data->author_id;
+		}else{
+			$this->anonymous_name = $comment_data->anon_name;
+			$this->anonymous_email = $comment_data->anon_email;
+		}
+
+		$this->body = $comment_data->body;
 	}
 
 }
