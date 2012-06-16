@@ -398,13 +398,12 @@ class sfBlogComment
 	protected $swoosh_user = false;
 	protected $author_id;
 	protected $timetamp;
-	protected $email;
 	protected $body;
 
 	protected $anonymous_name = NULL;
 	protected $anonymous_email = NULL;
 
-	protected $author;
+	protected $author = NULL;
 
 	/**
 	 * Create a blog comment object.
@@ -439,6 +438,63 @@ class sfBlogComment
 		}
 
 		$this->body = $comment_data->body;
+	}
+	
+	/**
+	 * Check if a comment was posted anonymously or by a registered user.
+	 *
+	 * @return boolean 				If this comment was posted anonymously
+	 */
+	public function isAnonymous()
+	{
+		return !$this->$swoosh_user;
+	}
+	
+	/**
+	 * Load in user data, if a registered user
+	 */
+	public function loadAuthorData()
+	{
+		if(!$this->swoosh_user){ return false; }
+		$this->author = sfCore::make('sfUser');
+		$this->author->load($this->author_id);
+		return $this->author;
+	}
+	
+	/**
+	 * Get this comment's author
+	 *
+	 * @return string 			Comment poster's name
+	 */
+	public function getAuthorName()
+	{
+		if($this->swoosh_user)
+		{
+			if($this->author === NULL){ $this->loadAuthorData(); }
+			return $this->author->getUsername();
+		}else{
+			return $this->anonymous_name;
+		}
+	}
+	
+	
+	/**
+	 * Get this comment author's email
+	 *
+	 * I'm not completely sure that this has any practical purpose; one shouldn't display emails
+	 * in plain text, anyway. Still, left in for completeness.
+	 *
+	 * @return string 			Comment poster's email
+	 */
+	public function getAuthorEmail()
+	{
+		if($this->swoosh_user)
+		{
+			if($this->author === NULL){ $this->loadAuthorData(); }
+			return $this->author->getEmail();
+		}else{
+			return $this->anonymous_email;
+		}
 	}
 
 }
