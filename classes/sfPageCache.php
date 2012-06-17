@@ -15,6 +15,11 @@
 
 class sfPageCache
 {
+	/**
+	 * Authorization override is a shortcut for disabling sfPageCache for authorized (logged-in)
+	 * users. There is no magic behavior here; it simply disables all cache functions if
+	 * fAuthorization says the user is logged in.
+	 */
 	protected static $authorized_override = false;
 
 	protected static $enabled = false;
@@ -37,6 +42,20 @@ class sfPageCache
 
 		self::$enabled = true;
 		return true;
+	}
+
+	/**
+	 * Use a custom fCache object to serve caches. Any fCache object works, so if the directory
+	 * cache isn't working well, developers should test different cache options and find one that
+	 * works best.
+	 * 
+	 * @param fCache $cache 		The fCache object to serve as a cache
+	 */
+	public static function setCustomCache(fCache $cache)
+	{
+		if(static::$authorized_override){ return false; }
+		static::$enabled = true;
+		static::$cache = $cache;
 	}
 
 	/**
