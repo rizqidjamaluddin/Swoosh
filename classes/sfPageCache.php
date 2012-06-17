@@ -37,10 +37,10 @@ class sfPageCache
 	 */
 	public static function setDirectory($directory)
 	{
-		if(self::$authorized_override){ return false; }
-		self::$cache = new fCache('directory', $directory);
+		if(static::$authorized_override){ return false; }
+		static::$cache = new fCache('directory', $directory);
 
-		self::$enabled = true;
+		static::$enabled = true;
 		return true;
 	}
 
@@ -66,7 +66,7 @@ class sfPageCache
 	 */
 	public static function setTimeToLive($ttl)
 	{
-		self::$ttl = $ttl;
+		static::$ttl = $ttl;
 	}
 
 	/**
@@ -77,7 +77,7 @@ class sfPageCache
 	{
 		if(fAuthorization::checkLoggedIn())
 		{
-			self::$authorized_override = true;
+			static::$authorized_override = true;
 		}
 	}
 
@@ -93,8 +93,8 @@ class sfPageCache
 	 */
 	public static function load($identifier)
 	{
-		if(self::$authorized_override){ return false; }
-		$cached = self::$cache->get($identifier);
+		if(static::$authorized_override){ return false; }
+		$cached = static::$cache->get($identifier);
 		if($cached){
 			echo $cached;
 			exit();
@@ -111,11 +111,11 @@ class sfPageCache
 	public static function create($identifier)
 	{
 
-		if(self::$authorized_override){ return false; }
-		if(!self::$enabled){ return false; }
+		if(static::$authorized_override){ return false; }
+		if(!static::$enabled){ return false; }
 
-		self::$started = true;
-		self::$identifier = $identifier;
+		static::$started = true;
+		static::$identifier = $identifier;
 		fBuffer::start();
 		return true;
 	}
@@ -128,12 +128,12 @@ class sfPageCache
 	 */
 	public static function save()
 	{
-		if(self::$authorized_override){ return false; }
-		if(!self::$enabled){ return false; }
+		if(static::$authorized_override){ return false; }
+		if(!static::$enabled){ return false; }
 
 		$contents = fBuffer::get();
 		fBuffer::stop();
-		self::$cache->set($identifier, $contents, self::$ttl);
+		static::$cache->set($identifier, $contents, static::$ttl);
 
 		return true;
 	}
@@ -145,8 +145,8 @@ class sfPageCache
 	 */
 	public static function delete($identifier)
 	{
-		if(!self::$enabled){ return false; }
-		self::$cache->delete($identifier);
+		if(!static::$enabled){ return false; }
+		static::$cache->delete($identifier);
 	}
 
 	/**
@@ -154,7 +154,7 @@ class sfPageCache
 	 */
 	public static function clear()
 	{
-		self::$cache->clear();
+		static::$cache->clear();
 		return true;
 	}
 
