@@ -165,7 +165,7 @@ class sfUsers {
 	public static function keyExists($key)
 	{
 		$query = sfCore::$db->query("SELECT count(*) FROM `swoosh_users` WHERE `key`=%s LIMIT 1", $key);
-		return $query->getchScalar();
+		return $query->fetchScalar();
 	}
 
 
