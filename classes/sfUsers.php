@@ -14,15 +14,7 @@
 
 class sfUsers {
 
-	public static $db;
-	private static $hooked = false;
 	public static $levels;
-
-	public static function hookDatabase(fDatabase $db)
-	{
-		self::$db = $db;
-		self::$hooked = true;
-	}
 
 	/**
 	 * Set user level structure. Automatically does the same to fAuthorization.
@@ -84,15 +76,12 @@ class sfUsers {
 	public static function createNewUser($username, $password, $email)
 	{
 
-		if(!self::$hooked){
-			throw new fProgrammerException('sfUsers not yet hooked to a database.');
-		}
-
 		$errors = Array();
-		if(fRecordSet::tally('sfUserData', array('username=' => $username))){
+
+		if(sfCore::$db->query("SELECT count(*) FROM `swoosh_users` WHERE `username`=%s LIMIT 1", $username)->fetchScalar()){
 			$errors['username'] = sfInvalidException::EXISTING;
 		}
-		if(fRecordSet::tally('sfUserData', array('email=' => $email))){
+		if(sfCore::$db->query("SELECT count(*) FROM `swoosh_users` WHERE `email`=%s LIMIT 1", $email)->fetchScalar()){
 			$errors['email'] = sfInvalidException::EXISTING;
 		}
 		if(!empty($errors)){
@@ -107,17 +96,20 @@ class sfUsers {
 			// for no reason what-so-ever. Still, best be safe. We'd want to survive
 			// the apocalypse. That'd look great on our portfolio.
 			$key = fCryptography::randomString(128);
-		} while (fRecordSet::tally('sfUserData', array('key=' => $key)));
+		} while ( static::keyExists($key) );
 
-		$new_user_data = new sfUserData();
-		$new_user_data->setUsername($username);
-		$new_user_data->setPassword(sfBcrypt::hash($password));
-		$new_user_data->setEmail($email);
-		$new_user_data->setKey($key);
-		$new_user_data->store();
+		$new_post = sfCore::$db->query("INSERT INTO `swoosh_users` (
+			`id`, `username`, `password`, `email`, `level`, `key`)
+			VALUES (
+				NULL, %s, %s, %s, NULL, %s)",
+			$username,
+			sfBcrypt::hash($password),
+			$email,
+			$key
+			);
 
 		$obj = fCore::make('sfUser');
-		$obj->load($new_user_data->getId());
+		$obj->loadByUsername($username);
 		return $obj;
 	}
 
@@ -147,8 +139,7 @@ class sfUsers {
 	public static function fetchUserByUsername($username)
 	{
 		$obj = fCore::make('sfUser');
-		$obj->load(array('username' => $username));
-		return $obj;
+		return $obj->loadByUsername($username);
 	}
 
 	/**
@@ -162,8 +153,19 @@ class sfUsers {
 	public static function fetchUserByEmail($email)
 	{
 		$obj = fCore::make('sfUser');
-		$obj->load(array('email' => $email));
-		return $obj;
+		 return $obj->loadByQuery(sfCore::$db->query("SELECT * FROM `swoosh_users` WHERE `email`=%s LIMIT 1", $email));
+	}
+
+	/**
+	 * Check if a user with a particular key exists.
+	 * 
+	 * @param string $key 		The key to check
+	 * @return boolean 			If this key exists
+	 */
+	public static function keyExists($key)
+	{
+		$query = sfCore::$db->query("SELECT count(*) FROM `swoosh_users` WHERE `key`=%s LIMIT 1", $key);
+		return $query->getchScalar();
 	}
 
 
@@ -174,13 +176,14 @@ class sfUsers {
 		They're designed to extend them, not replace them.
 	*/
 
-	public static $current_user;
-	private static $logged_in;
+	protected static $current_user;
+	protected static $current_user_object;
+	protected static $logged_in;
 
 	/**
 	 * Attempt to login, and register through fAuthorization when successful.
 	 * 
-	 * @throws fNotFoundException		When no user by provided username exists
+	 * @throws sfNotFoundException		When no user by provided username exists
 	 * @throws sfBadPasswordException	When the given password fails to match
 	 * 
 	 * @param string $username 			Username for attempted login
@@ -189,24 +192,20 @@ class sfUsers {
 	 */
 	public static function login($username, $password)
 	{
-		try{
-			$login_attempt = sfCore::make('sfUser');
-			$login_attempt->load(array('username' => $username));
-		}catch(fNotFoundException $e){
-			throw new fNotFoundException();
-			return;
-		}
+		$login_attempt = sfCore::make('sfUser');
+
+		// will throw sfNotFoundException if not available
+		$login_attempt->loadByUsername($username);
 
 		if(!$login_attempt->matchPassword($password)){
 			throw new sfBadPasswordException();
 			return;
 		}
 
-		self::$current_user = $login_attempt;
-		self::$logged_in = true;
-		fAuthorization::setUserAuthLevel(
-			self::translateAuthLevelInteger(self::$current_user->getLevel()));
+		fAuthorization::setUserAuthLevel($login_attempt->getLevel());
 		fAuthorization::setUserToken($username);
+
+		static::evaluateSession();
 		return true;
 	}
 
@@ -218,8 +217,18 @@ class sfUsers {
 	public static function logout()
 	{
 		fAuthorization::destroyUserInfo();
-		self::$logged_in = false;
+		static::$logged_in = false;
 		return true;
+	}
+
+	/**
+	 * Master function to evaluate current user's login-ish-ness.
+	 */
+	public static function evaluateSession()
+	{
+		if(!static::isLoggedIn()){ return; }
+		static::$logged_in = true;
+		static::$current_user = fAuthorization::getUserToken();
 	}
 
 	/**
@@ -249,13 +258,9 @@ class sfUsers {
 	 */
 	public static function getCurrentUsername()
 	{
-		if(self::isLoggedIn())
-		{
-			return fAuthorization::getUserToken();
-		}
-		return false;
+		static::evaluateSession();
+		return static::$current_user;
 	}
-
 
 	/**
 	 * Get current user object.
@@ -264,13 +269,14 @@ class sfUsers {
 	 */
 	public static function getCurrentUser()
 	{
-		if(!isset(self::$current_user) && self::isLoggedIn())
-		{
-			self::$current_user = sfCore::make('sfUser');
-			self::$current_user->load(array('username' => self::$username));
-			return self::$current_user;
+		if(!static::isLoggedIn()) { return false; }
+		static::evaluateSession();
+		if(isset(static::$current_user_object)){
+			return static::$current_user_object();
 		}else{
-			return false;
+			static::$current_user_object = sfCore::make('sfUser');
+			static::$current_user_object->loadByUsername(static::$current_user);
+			return static::$current_user_object;
 		}
 	}
 
@@ -278,18 +284,50 @@ class sfUsers {
 
 class sfUser {
 
-	protected $main_user_data;
+	protected $id;
+	protected $username;
+	protected $email;
+	protected $level;
+	protected $key;
 
-	// remember, only primary keys accepted (or ID column)
-	public function load($fActiveRecord_selector)
+	protected $password;
+
+	/**
+	 * Basic load function based on ID
+	 */
+	public function load($id)
 	{
+		$this->loadFromQuery(sfCore::$db->query("SELECT * FROM `swoosh_users` WHERE `id`=%i LIMIT 1", $id));
+		return $this;
+	}
 
+	public function loadByUsername($username)
+	{
+		$this->loadFromQuery(sfCore::$db->query("SELECT * FROM `swoosh_users` WHERE `username`=%s LIMIT 1", $username));
+		return $this;
+	}
+
+	public function loadFromQuery(fResult $query)
+	{
 		try{
-			$main_user_data = new sfUserData($fActiveRecord_selector);
-		}catch(exception $e){
-			throw new fNotFoundException('No user matching this data was found.');
+			$query->throwIfNoRows();
+		}catch(fNoRowsException $e){
+			throw new sfNotFoundException();
 		}
-		$this->main_user_data = $main_user_data;
+		$query = $query->asObjects();
+		$this->loadFromObject($query->fetchRow());
+		return $this;
+	}
+
+	public function loadFromObject(stdClass $object)
+	{
+		$this->id = $object->id;
+		$this->username = $object->username;
+		$this->password = $object->password;
+		$this->email = $object->email;
+		$this->level = $object->level;
+		$this->key = $object->key; 
+		return $this;
 	}
 
 	/**
@@ -298,18 +336,18 @@ class sfUser {
 
 	public function getId()
 	{
-		return $this->main_user_data->getId();
+		return $this->id;
 	}
 
 	public function getUsername()
 	{
-		return $this->main_user_data->getUsername();
+		return $this->username;
 	}
 
 	public function getLevel()
 	{
 		$sfUsers = sfCore::getClass('sfUsers');
-		return $sfUsers::translateAuthLevelInteger($this->main_user_data->getLevel());
+		return $sfUsers::translateAuthLevelInteger($this->level);
 	}
 
 	/**
@@ -321,8 +359,8 @@ class sfUser {
 	public function setLevel($level)
 	{	
 		$sfUsers = sfCore::getClass('sfUsers');
-		$this->main_user_data->setLevel($sfUsers::translateAuthLevelString($level));
-		$this->main_user_data->store();
+		sfCore::$db->query("UPDATE `swoosh_users` SET `level`=%i WHERE `id`=%i",
+			$sfUsers::translateAuthLevelString($level), $this->id);
 		return $level;
 
 	}
@@ -330,11 +368,13 @@ class sfUser {
 	/**
 	 * Get a user's secret key.
 	 * 
+	 * TODO: lazy load keys
+	 * 
 	 * @return string 		128-character secret key
 	 */
 	public function getKey()
 	{
-		return $this->main_user_data->getKey();
+		return $this->key;
 	}
 
 	/**
@@ -344,11 +384,13 @@ class sfUser {
 	 */
 	public function generateKey()
 	{
+		$sfUsers = sfCore::getClass('sfUsers');
 		do {
 			$key = fCryptography::randomString(128);
-		} while (fRecordSet::tally('sfUserData', array('key=' => $key)));
-		$this->main_user_data->setKey($key);
-		$this->main_user_data->store();
+		} while ( $sfUsers::keyExists() );
+
+		sfCore::$db->query("UPDATE `swoosh_users` SET `key`=%s WHERE `id`=%i",
+			$key, $this->id);
 		return $key;
 	}
 
@@ -361,18 +403,18 @@ class sfUser {
 	 */
 	public function matchKey($key)
 	{
-		return $key == $this->main_user_data->getKey();
+		return $key == $this->key;
 	}
 
 	public function getEmail()
 	{
-		return $this->main_user_data->getEmail();
+		return $this->email;
 	}
 
 	public function setEmail($email_address)
 	{
-		$this->main_user_data->setEmail($email_address);
-		$this->main_user_data->store();
+		sfCore::$db->query("UPDATE `swoosh_users` SET `email`=%s WHERE `id`=%i",
+			$email_address, $this->id);
 	}
 
 
@@ -384,7 +426,7 @@ class sfUser {
 	 */
 	public function matchPassword($password)
 	{
-		return sfBcrypt::check($password, $this->main_user_data->getPassword());
+		return sfBcrypt::check($password, $this->password);
 	}
 
 	/**
@@ -395,8 +437,8 @@ class sfUser {
 	 */
 	public function setPassword($password)
 	{
-		$this->main_user_data->setPassword(sfBcrypt::hash($password));
-		$this->main_user_data->store();
+		sfCore::$db->query("UPDATE `swoosh_users` SET `password`=%s WHERE `id`=%i",
+			sfBcrypt::hash($password), $this->id);
 		return true;
 	}
 
@@ -407,6 +449,7 @@ class sfUser {
 
 }
 
+/*
 class sfUserData extends fActiveRecord
 {
 	protected function configure(){}
@@ -414,5 +457,5 @@ class sfUserData extends fActiveRecord
 
 // other flourish hooks
 fORM::mapClassToTable('sfUserData', 'swoosh_users');
-
+*/
 ?>
