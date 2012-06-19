@@ -223,8 +223,8 @@ class sfBlogPost
 	 */
 	public function load($id)
 	{
-		$result = sfCore::$db->query("SELECT * FROM `swoosh_blog_posts` WHERE `id`=%i LIMIT 1", $id);
-		$this->loadFromQuery($result);
+		$this->loadFromQuery(sfCore::$db->query("SELECT * FROM `swoosh_blog_posts` WHERE `id`=%i LIMIT 1", $id));
+		return $this;
 	}
 	
 	/**
@@ -248,6 +248,7 @@ class sfBlogPost
 		$query_result = $query_result->asObjects();
 		$data = $query_result->fetchRow();
 		$this->loadFromObject($data);
+		return $this;
 	}
 	
 	/**
@@ -266,6 +267,7 @@ class sfBlogPost
 		$this->category = $post_object->category;
 		$this->comments_enabled = $post_object->comments_enabled;
 		$this->slug = $post_object->slug;
+		return $this;
 	}
 
 	/**
@@ -439,6 +441,8 @@ class sfBlogComment
 		}
 
 		$this->body = $comment_data->body;
+
+		return $this;
 	}
 	
 	/**
