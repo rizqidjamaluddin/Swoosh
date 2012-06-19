@@ -21,7 +21,7 @@ class sfBlog
 	 */
 	public static function setPostsPerPage($posts_per_page)
 	{
-		self::$posts_per_page = $posts_per_page;
+		static::$posts_per_page = $posts_per_page;
 		return true;
 	}
 
@@ -71,7 +71,7 @@ class sfBlog
 		$adjusted_page = $page - 1;
 		$array = Array();
 		$posts = sfCore::$db->query("SELECT * FROM `swoosh_blog_posts` LIMIT %i, %i;",
-			$adjusted_page * self::$posts_per_page, self::$posts_per_page)->asObjects();	
+			$adjusted_page * static::$posts_per_page, static::$posts_per_page)->asObjects();	
 		try{
 			$posts->throwIfNoRows();
 		}catch(fNoRowsException $e){
@@ -128,7 +128,7 @@ class sfBlog
 		$adjusted_page = $page - 1;
 		$array = Array();
 		$posts = sfCore::$db->query("SELECT * FROM `swoosh_blog_posts` WHERE `category`=%s LIMIT %i, %i;",
-			$category, $adjusted_page * self::$posts_per_page, self::$posts_per_page)->asObjects();	
+			$category, $adjusted_page * static::$posts_per_page, static::$posts_per_page)->asObjects();	
 		try{
 			$posts->throwIfNoRows();
 		}catch(fNoRowsException $e){
