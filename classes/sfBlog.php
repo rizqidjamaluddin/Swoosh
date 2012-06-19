@@ -393,6 +393,7 @@ class sfBlogPost
 class sfBlogComment
 {
 	protected $id;
+	protected $parent_id;
 	protected $parent;
 
 	protected $swoosh_user = false;
@@ -426,7 +427,7 @@ class sfBlogComment
 	public function loadFromObject(stdClass $comment_data)
 	{
 		$this->id = $comment_data->comment_id;
-		$this->parent = $comment_data->post_id;
+		$this->parent_id = $comment_data->post_id;
 		$this->timestamp = $comment_data->timestamp;
 
 		if($comment_data->is_authorized){
@@ -456,6 +457,7 @@ class sfBlogComment
 	public function loadAuthorData()
 	{
 		if(!$this->swoosh_user){ return false; }
+		if(isset($this->author)){ return $this->author; }
 		$this->author = sfCore::make('sfUser');
 		$this->author->load($this->author_id);
 		return $this->author;
@@ -496,6 +498,56 @@ class sfBlogComment
 			return $this->anonymous_email;
 		}
 	}
+
+	/**
+	 * Lazy-loading of parent post, just for when it's necessary.
+	 */
+	public function loadParentPost()
+	{
+		if(isset($this->parent)){
+			return $this->parent;
+		}
+		$this->parent = sfCore::make('sfBlogPost');
+		$this->parent->load($this->parent_id);
+		return $this->parent;
+	}
+
+	/**
+	 * Get this comment's author, only if it was made by a registered user.
+	 * 
+	 * @return boolean, sfUser 		False if not registered
+	 */
+	public function getAuthor()
+	{
+		if($this->isAnonymous) return false;
+
+	}
+
+	public function getTimetamp()
+	{
+		return $thos->timestamp;
+	}
+
+	public function getBody()
+	{
+		return $this->body;
+	}
+
+	public function getParent()
+	{
+		return $this->loadParentPost();
+	}
+
+	/**
+	 * Utilities
+	 */
+	public function isPostAuthor()
+	{
+		if($this->isAnonymous){ return false; }
+		$this->loadParentPost();
+		return $this->parent->getAuthor()->getId() == $this->author->getId();
+	}
+
 
 }
 
