@@ -288,8 +288,12 @@ class sfUser {
 	protected $username;
 	protected $email;
 	protected $level;
-	protected $key;
 
+	/**
+	 * These are secure variables that should only be loaded when needed.
+	 * In total, they consume 200 bytes of data.
+	 */
+	protected $key;
 	protected $password;
 
 	/**
@@ -297,13 +301,13 @@ class sfUser {
 	 */
 	public function load($id)
 	{
-		$this->loadFromQuery(sfCore::$db->query("SELECT * FROM `swoosh_users` WHERE `id`=%i LIMIT 1", $id));
+		$this->loadFromQuery(sfCore::$db->query("SELECT `username`,`email`,`level` FROM `swoosh_users` WHERE `id`=%i LIMIT 1", $id));
 		return $this;
 	}
 
 	public function loadByUsername($username)
 	{
-		$this->loadFromQuery(sfCore::$db->query("SELECT * FROM `swoosh_users` WHERE `username`=%s LIMIT 1", $username));
+		$this->loadFromQuery(sfCore::$db->query("SELECT `username`,`email`,`level` FROM `swoosh_users` WHERE `username`=%s LIMIT 1", $username));
 		return $this;
 	}
 
@@ -323,10 +327,8 @@ class sfUser {
 	{
 		$this->id = $object->id;
 		$this->username = $object->username;
-		$this->password = $object->password;
 		$this->email = $object->email;
 		$this->level = $object->level;
-		$this->key = $object->key; 
 		return $this;
 	}
 
@@ -366,6 +368,20 @@ class sfUser {
 	}
 
 	/**
+	 * Load a user's key and password hash in. Lazy-loaded to avoid unnecessary data
+	 * being stores when not in use.
+	 */
+	public function loadPrivateData()
+	{
+		if(isset($this->key)){ return false; }
+		$result = sfCore::$db->query("SELECT `password`, `key` FROM `swoosh_users` WHERE `id`=%i LIMIT 1", $this->id)
+			->asObjects();
+		$object = $result->fetchRow();
+		$this->password = $object->password;
+		$this->key = $object->key;
+	}
+
+	/**
 	 * Get a user's secret key.
 	 * 
 	 * TODO: lazy load keys
@@ -374,6 +390,7 @@ class sfUser {
 	 */
 	public function getKey()
 	{
+		$this->loadPrivateData();
 		return $this->key;
 	}
 
@@ -403,6 +420,7 @@ class sfUser {
 	 */
 	public function matchKey($key)
 	{
+		$this->loadPrivateData();
 		return $key == $this->key;
 	}
 
@@ -426,6 +444,7 @@ class sfUser {
 	 */
 	public function matchPassword($password)
 	{
+		$this->loadPrivateData();
 		return sfBcrypt::check($password, $this->password);
 	}
 
