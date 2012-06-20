@@ -415,7 +415,19 @@ class sfBlogComment
 	 */
 	public function load($comment_id)
 	{
+		return $this->loadFromQuery(sfCore::$db->query("SELECT * FROM `swoosh_blog_comments` WHERE `id`=%i LIMIT 1", $comment_id));
+	}
 
+	public function loadFromQuery(fResult $result)
+	{
+		try{
+			$result->throwIfNoRows();
+		}catch(fNoRowsException $e){
+			throw new sfNotFoundException();
+		}
+		$result = $result->asObjects();
+		$this->loadFromObject($result->fetchRow());
+		return $this;
 	}
 	
 	/**
