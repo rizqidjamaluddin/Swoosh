@@ -307,15 +307,15 @@ class sfUser {
 		return $this;
 	}
 
-	public function loadFromQuery(fResult $query)
+	public function loadFromQuery(fResult $result)
 	{
 		try{
-			$query->throwIfNoRows();
+			$result->throwIfNoRows();
 		}catch(fNoRowsException $e){
 			throw new sfNotFoundException();
 		}
-		$query = $query->asObjects();
-		$this->loadFromObject($query->fetchRow());
+		$result = $result->asObjects();
+		$this->loadFromObject($result->fetchRow());
 		return $this;
 	}
 
