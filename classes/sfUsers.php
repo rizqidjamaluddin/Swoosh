@@ -108,7 +108,7 @@ class sfUsers {
 			$key
 			);
 
-		$obj = fCore::make('sfUser');
+		$obj = sfCore::make('sfUser');
 		$obj->loadByUsername($username);
 		return $obj;
 	}
@@ -116,14 +116,14 @@ class sfUsers {
 	/**
 	 * Fetch a user by ID.
 	 * 
-	 * @throws fNotFoundException	When no user matching $id is found
+	 * @throws sfNotFoundException	When no user matching $id is found
 	 * 
 	 * @param integer $id			A user ID.
 	 * @return sfUser 				The User object.
 	 */
 	public static function fetchUser($id)
 	{
-		$obj = fCore::make('sfUser');
+		$obj = sfCore::make('sfUser');
 		$obj->load($id);
 		return $obj;
 	}
@@ -131,21 +131,21 @@ class sfUsers {
 	/**
 	 * Fetch a user by username.
 	 * 
-	 * @throws fNotFoundException	When no user matching $username is found
+	 * @throws sfNotFoundException	When no user matching $username is found
 	 * 
 	 * @param string $username		A username.
 	 * @return sfUser 				The User object.
 	 */
 	public static function fetchUserByUsername($username)
 	{
-		$obj = fCore::make('sfUser');
+		$obj = sfCore::make('sfUser');
 		return $obj->loadByUsername($username);
 	}
 
 	/**
 	 * Fetch a user by email.
 	 * 
-	 * @throws fNotFoundException	When no user matching $email is found
+	 * @throws sfNotFoundException	When no user matching $email is found
 	 * 
 	 * @param string $email			A user email address.
 	 * @return sfUser 				The User object.
@@ -301,20 +301,20 @@ class sfUser {
 	 */
 	public function load($id)
 	{
-		$this->loadFromQuery(sfCore::$db->query("SELECT `username`,`email`,`level` FROM `swoosh_users` WHERE `id`=%i LIMIT 1", $id));
+		$this->loadFromQuery(sfCore::$db->query("SELECT `id`,`username`,`email`,`level` FROM `swoosh_users` WHERE `id`=%i LIMIT 1", $id));
 		return $this;
 	}
 
 	public function loadByUsername($username)
 	{
-		$this->loadFromQuery(sfCore::$db->query("SELECT `username`,`email`,`level` FROM `swoosh_users` WHERE `username`=%s LIMIT 1", $username));
+		$this->loadFromQuery(sfCore::$db->query("SELECT `id`,`username`,`email`,`level` FROM `swoosh_users` WHERE `username`=%s LIMIT 1", $username));
 		return $this;
 	}
 
 	public function loadFromQuery(fResult $result)
 	{
 		try{
-			$result->throwIfNoRows();
+			$result->tossIfNoRows();
 		}catch(fNoRowsException $e){
 			throw new sfNotFoundException();
 		}
