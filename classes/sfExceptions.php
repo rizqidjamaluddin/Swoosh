@@ -14,6 +14,28 @@ class sfInvalidException extends Exception
 	public function __construct($error_array)
 	{
 		$this->errors = $error_array;
+		$msg = "sfInvalidException was triggered for these parameters: \n";
+		foreach($error_array as $key => $error){
+			$msg .= $key . ": " . $error . "\n";
+		}
+		$this->message = $msg;
+	}
+}
+
+class sfExpectedException extends fExpectedException{}
+class sfDiagnosticsException extends sfExpectedException
+{
+	const MISSING = 'MISSING';
+	const INVALID = 'INVALID';
+
+	public $errors;
+
+	public function __construct($error_array)
+	{
+		$this->errors = $error_array;
+	}
+	public function getErrors(){
+		return $this->errors;
 	}
 }
 
