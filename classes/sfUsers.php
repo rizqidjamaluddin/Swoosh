@@ -486,6 +486,27 @@ class sfUser {
 		return $this->getId();
 	}
 
+	/**
+	 * Do diagnostics on this user's data to make sure all is intact.
+	 */
+	public function doDiagnostics()
+	{
+		$errors = Array();
+
+		$this->loadPrivateData();
+		if(empty($this->password)){
+			$errors['password'] = sfDiagnosticsException::MISSING;
+		}
+		if(empty($this->key)){
+			$errors['key'] = sfDiagnosticsException::MISSING;
+		}
+
+
+		if(!empty($errors)){
+			throw new sfDiagnosticsException($errors);
+		}
+	}
+
 }
 
 /*
