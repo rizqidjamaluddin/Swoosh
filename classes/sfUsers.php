@@ -78,6 +78,26 @@ class sfUsers {
 
 		$errors = Array();
 
+		if(strlen($username) < '1'){
+			$errors['username'] = sfInvalidException::TOO_SHORT;
+		}
+		if(strlen($email) < '1'){
+			$errors['email'] = sfInvalidException::TOO_SHORT;
+		}
+		if(strlen($password) < '5'){
+			$errors['password'] = sfInvalidException::TOO_SHORT;
+		}
+
+		if(strlen($username) > '199'){
+			$errors['username'] = sfInvalidException::TOO_LONG;
+		}
+		if(strlen($email) > '199'){
+			$errors['email'] = sfInvalidException::TOO_LONG;
+		}
+		if(strlen($password) > '199'){
+			$errors['password'] = sfInvalidException::TOO_LONG;
+		}
+
 		if(sfCore::$db->query("SELECT count(*) FROM `swoosh_users` WHERE `username`=%s LIMIT 1", $username)->fetchScalar()){
 			$errors['username'] = sfInvalidException::EXISTING;
 		}
