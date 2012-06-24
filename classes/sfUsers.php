@@ -115,13 +115,13 @@ class sfUsers {
 			// 10^200 generations. Higher chances exist of the world just exploding
 			// for no reason what-so-ever. Still, best be safe. We'd want to survive
 			// the apocalypse. That'd look great on our portfolio.
-			$key = fCryptography::randomString(128);
+			$key = fCryptography::randomString(64);
 		} while ( static::keyExists($key) );
 
 		$new_post = sfCore::$db->query("INSERT INTO `swoosh_users` (
 			`id`, `username`, `password`, `email`, `level`, `key`)
 			VALUES (
-				NULL, %s, %s, %s, NULL, %s)",
+				NULL, %s, %s, %s, 1, %s)",
 			$username,
 			sfBcrypt::hash($password),
 			$email,
@@ -272,6 +272,14 @@ class sfUsers {
 	}
 
 	/**
+	 * Check user's auth level, based on fAuthorization.
+	 */
+	public static function checkUserAuthLevel($level)
+	{
+		return fAuthorization::checkAuthLevel($level);
+	}
+
+	/**
 	 * Get current user's username.
 	 * 
 	 * @return string 		This user's username
@@ -366,6 +374,29 @@ class sfUser {
 		return $this->username;
 	}
 
+	/**
+	 * Sets a user's username.
+	 * 
+	 * @param string $username 	The desired username
+	 * @return string 			Same as input
+	 */
+	public function setUsername($username)
+	{	
+		if($this->username == $username){ return; }
+
+		$check = sfCore::$db->query("SELECT count(*) FROM `swoosh_users` WHERE `username`=%s LIMIT 1", $username);
+		if($check->fetchScalar() != 0){
+			throw new sfInvalidException(Array('username' => sfInvalidException::EXISTING));
+		}
+
+		$sfUsers = sfCore::getClass('sfUsers');
+		sfCore::$db->query("UPDATE `swoosh_users` SET `username`=%s WHERE `id`=%i",
+			$username, $this->id);
+		$this->username = $username;
+		return $username;
+
+	}
+
 	public function getLevel()
 	{
 		$sfUsers = sfCore::getClass('sfUsers');
@@ -383,6 +414,7 @@ class sfUser {
 		$sfUsers = sfCore::getClass('sfUsers');
 		sfCore::$db->query("UPDATE `swoosh_users` SET `level`=%i WHERE `id`=%i",
 			$sfUsers::translateAuthLevelString($level), $this->id);
+		$this->level = $sfUsers::translateAuthLevelString($level);
 		return $level;
 
 	}
@@ -423,11 +455,12 @@ class sfUser {
 	{
 		$sfUsers = sfCore::getClass('sfUsers');
 		do {
-			$key = fCryptography::randomString(128);
-		} while ( $sfUsers::keyExists() );
+			$key = fCryptography::randomString(64);
+		} while ( $sfUsers::keyExists($key) );
 
 		sfCore::$db->query("UPDATE `swoosh_users` SET `key`=%s WHERE `id`=%i",
 			$key, $this->id);
+		$this->key = $key;
 		return $key;
 	}
 
@@ -451,8 +484,15 @@ class sfUser {
 
 	public function setEmail($email_address)
 	{
+
+		$check = sfCore::$db->query("SELECT count(*) FROM `swoosh_users` WHERE `email`=%s LIMIT 1", $email_address);
+		if($check->fetchScalar() != 0){
+			throw new sfInvalidException(Array('email' => sfInvalidException::EXISTING));
+		}
+
 		sfCore::$db->query("UPDATE `swoosh_users` SET `email`=%s WHERE `id`=%i",
 			$email_address, $this->id);
+		$this->email = $email_address;
 	}
 
 
