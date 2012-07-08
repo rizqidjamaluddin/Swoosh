@@ -51,6 +51,43 @@ class sfFileStorage
 	{
 		return self::$directory->getPath();
 	}
+	
+	/**
+	 * Obtain a list of all files registered vis sfFileStorage.
+	 *
+	 * @return array 				A list of sfFileStorageItem objects
+	 */
+	public static function getFiles()
+	{
+		$result = Array();
+		$files = sfCore::$db->query("SELECT * FROM `swoosh_file_storage`")->asObjects();
+		foreach($files as $file){
+			$sfFileStorageItem = sfCore::make('sfFileStorageItem');
+			$sfFileStorageItem->loadFromObject($file);
+			$result[] = $sfFileStorageItem;
+		}
+		return $result;
+	}
+	
+	/**
+	 *
+	 */
+	public static function getFile($id)
+	{
+		$obj = sfCore::make('sfFileStorageItem');
+		$obj->loadFromQuery(sfCore::$db->query("SELECT * FROM `swoosh_file_storage` WHERE `id`=%i", $id));
+		return $obj;
+	}
+	
+	/**
+	 *
+	 */
+	public static function getFileByFilename($filename)
+	{
+		$obj = sfCore::make('sfFileStorageItem');
+		$obj->loadFromQuery(sfCore::$db->query("SELECT * FROM `swoosh_file_storage` WHERE `filename`=%s", $filename));
+		return $obj;
+	}
 
 	/**
 	 * Upload a new file into storage. Extracts data from sfUsers as well.
@@ -78,7 +115,18 @@ class sfFileStorage
 			$auth_requirement = $sfUsers::translateAuthLevelString($auth_requirement);
 		}
 
+		// TODO: sanity checking for non-logged-in users
 		$user = $sfUsers::getCurrentUser();
+		
+		// search for duplicate file names
+		/*
+		$search = sfCore::$db->query("SELECT count(*) FROM `swoosh_file_storage` WHERE `filename`=%s LIMIT 1", $file->getName());
+		if($search->fetchScalar())
+		{
+			// this is an unexpected error; fUpload/fFile should automatically detect collisions and rename the files
+			// accordingly.
+			throw new fUnexpectedException();
+		}*/
 
 		// insert data to database
 		$insert = sfCore::db->query(
@@ -130,20 +178,34 @@ class sfFileStorageItem
 	 */
 	public function load($id)
 	{
-		$search = sfCore::db->query("SELECT * FROM `swoosh_file_storage` WHERE `id`='%i' LIMIT 1", $id);
+		$this->loadFromQuery(sfCore::db->query("SELECT * FROM `swoosh_file_storage` WHERE `id`='%i' LIMIT 1", $id));
+		return $this;
+	}
+	
+	public function loadFromQuery(fResult $query)
+	{
 		try{
-			$search->tossIfNoRows();
+			$query->tossIfNoRows();
 		}catch(fNoRowsException $e){
 			throw new fNotFoundException();
 		}
-		$data = $search->fetchRow();
-
-		$this->fFile = new fFile(self::$directory->getPath() . $data['filename']);
+		$query = $query->asObjects();
+		$this->loadFromObject($query->fetchRow());
+		return $this;
+	}
+	
+	/**
+	 *
+	 */
+	public function loadFromObject(stdClass $obj)
+	{
+		$this->fFile = new fFile(self::$directory->getPath() . $obj->filename);
 		$this->id = $id;
-		$this->downloads = $data['downloads'];
-		$this->uploader = $data['upload_user'];
-		$this->date = $data['upload_date'];
-		$this->auth_requirement = $data['auth_requirement'];
+		$this->downloads = $obj->downloads;
+		$this->uploader = $obj->upload_user;
+		$this->date = $obj->upload_date;
+		$this->auth_requirement = $obj->auth_requirement;
+		return $this;	
 	}
 
 	/**
