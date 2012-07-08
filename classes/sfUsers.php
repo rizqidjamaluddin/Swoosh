@@ -78,6 +78,26 @@ class sfUsers {
 
 		$errors = Array();
 
+		if(strlen($username) < '1'){
+			$errors['username'] = sfInvalidException::TOO_SHORT;
+		}
+		if(strlen($email) < '1'){
+			$errors['email'] = sfInvalidException::TOO_SHORT;
+		}
+		if(strlen($password) < '5'){
+			$errors['password'] = sfInvalidException::TOO_SHORT;
+		}
+
+		if(strlen($username) > '199'){
+			$errors['username'] = sfInvalidException::TOO_LONG;
+		}
+		if(strlen($email) > '199'){
+			$errors['email'] = sfInvalidException::TOO_LONG;
+		}
+		if(strlen($password) > '199'){
+			$errors['password'] = sfInvalidException::TOO_LONG;
+		}
+
 		if(sfCore::$db->query("SELECT count(*) FROM `swoosh_users` WHERE `username`=%s LIMIT 1", $username)->fetchScalar()){
 			$errors['username'] = sfInvalidException::EXISTING;
 		}
@@ -95,20 +115,20 @@ class sfUsers {
 			// 10^200 generations. Higher chances exist of the world just exploding
 			// for no reason what-so-ever. Still, best be safe. We'd want to survive
 			// the apocalypse. That'd look great on our portfolio.
-			$key = fCryptography::randomString(128);
+			$key = fCryptography::randomString(64);
 		} while ( static::keyExists($key) );
 
 		$new_post = sfCore::$db->query("INSERT INTO `swoosh_users` (
 			`id`, `username`, `password`, `email`, `level`, `key`)
 			VALUES (
-				NULL, %s, %s, %s, NULL, %s)",
+				NULL, %s, %s, %s, 1, %s)",
 			$username,
 			sfBcrypt::hash($password),
 			$email,
 			$key
 			);
 
-		$obj = fCore::make('sfUser');
+		$obj = sfCore::make('sfUser');
 		$obj->loadByUsername($username);
 		return $obj;
 	}
@@ -116,14 +136,14 @@ class sfUsers {
 	/**
 	 * Fetch a user by ID.
 	 * 
-	 * @throws fNotFoundException	When no user matching $id is found
+	 * @throws sfNotFoundException	When no user matching $id is found
 	 * 
 	 * @param integer $id			A user ID.
 	 * @return sfUser 				The User object.
 	 */
 	public static function fetchUser($id)
 	{
-		$obj = fCore::make('sfUser');
+		$obj = sfCore::make('sfUser');
 		$obj->load($id);
 		return $obj;
 	}
@@ -131,21 +151,21 @@ class sfUsers {
 	/**
 	 * Fetch a user by username.
 	 * 
-	 * @throws fNotFoundException	When no user matching $username is found
+	 * @throws sfNotFoundException	When no user matching $username is found
 	 * 
 	 * @param string $username		A username.
 	 * @return sfUser 				The User object.
 	 */
 	public static function fetchUserByUsername($username)
 	{
-		$obj = fCore::make('sfUser');
+		$obj = sfCore::make('sfUser');
 		return $obj->loadByUsername($username);
 	}
 
 	/**
 	 * Fetch a user by email.
 	 * 
-	 * @throws fNotFoundException	When no user matching $email is found
+	 * @throws sfNotFoundException	When no user matching $email is found
 	 * 
 	 * @param string $email			A user email address.
 	 * @return sfUser 				The User object.
@@ -252,6 +272,14 @@ class sfUsers {
 	}
 
 	/**
+	 * Check user's auth level, based on fAuthorization.
+	 */
+	public static function checkUserAuthLevel($level)
+	{
+		return fAuthorization::checkAuthLevel($level);
+	}
+
+	/**
 	 * Get current user's username.
 	 * 
 	 * @return string 		This user's username
@@ -288,8 +316,12 @@ class sfUser {
 	protected $username;
 	protected $email;
 	protected $level;
-	protected $key;
 
+	/**
+	 * These are secure variables that should only be loaded when needed.
+	 * In total, they consume 200 bytes of data.
+	 */
+	protected $key;
 	protected $password;
 
 	/**
@@ -297,20 +329,20 @@ class sfUser {
 	 */
 	public function load($id)
 	{
-		$this->loadFromQuery(sfCore::$db->query("SELECT * FROM `swoosh_users` WHERE `id`=%i LIMIT 1", $id));
+		$this->loadFromQuery(sfCore::$db->query("SELECT `id`,`username`,`email`,`level` FROM `swoosh_users` WHERE `id`=%i LIMIT 1", $id));
 		return $this;
 	}
 
 	public function loadByUsername($username)
 	{
-		$this->loadFromQuery(sfCore::$db->query("SELECT * FROM `swoosh_users` WHERE `username`=%s LIMIT 1", $username));
+		$this->loadFromQuery(sfCore::$db->query("SELECT `id`,`username`,`email`,`level` FROM `swoosh_users` WHERE `username`=%s LIMIT 1", $username));
 		return $this;
 	}
 
 	public function loadFromQuery(fResult $result)
 	{
 		try{
-			$result->throwIfNoRows();
+			$result->tossIfNoRows();
 		}catch(fNoRowsException $e){
 			throw new sfNotFoundException();
 		}
@@ -323,10 +355,8 @@ class sfUser {
 	{
 		$this->id = $object->id;
 		$this->username = $object->username;
-		$this->password = $object->password;
 		$this->email = $object->email;
 		$this->level = $object->level;
-		$this->key = $object->key; 
 		return $this;
 	}
 
@@ -342,6 +372,29 @@ class sfUser {
 	public function getUsername()
 	{
 		return $this->username;
+	}
+
+	/**
+	 * Sets a user's username.
+	 * 
+	 * @param string $username 	The desired username
+	 * @return string 			Same as input
+	 */
+	public function setUsername($username)
+	{	
+		if($this->username == $username){ return; }
+
+		$check = sfCore::$db->query("SELECT count(*) FROM `swoosh_users` WHERE `username`=%s LIMIT 1", $username);
+		if($check->fetchScalar() != 0){
+			throw new sfInvalidException(Array('username' => sfInvalidException::EXISTING));
+		}
+
+		$sfUsers = sfCore::getClass('sfUsers');
+		sfCore::$db->query("UPDATE `swoosh_users` SET `username`=%s WHERE `id`=%i",
+			$username, $this->id);
+		$this->username = $username;
+		return $username;
+
 	}
 
 	public function getLevel()
@@ -361,8 +414,23 @@ class sfUser {
 		$sfUsers = sfCore::getClass('sfUsers');
 		sfCore::$db->query("UPDATE `swoosh_users` SET `level`=%i WHERE `id`=%i",
 			$sfUsers::translateAuthLevelString($level), $this->id);
+		$this->level = $sfUsers::translateAuthLevelString($level);
 		return $level;
 
+	}
+
+	/**
+	 * Load a user's key and password hash in. Lazy-loaded to avoid unnecessary data
+	 * being stores when not in use.
+	 */
+	public function loadPrivateData()
+	{
+		if(isset($this->key)){ return false; }
+		$result = sfCore::$db->query("SELECT `password`, `key` FROM `swoosh_users` WHERE `id`=%i LIMIT 1", $this->id)
+			->asObjects();
+		$object = $result->fetchRow();
+		$this->password = $object->password;
+		$this->key = $object->key;
 	}
 
 	/**
@@ -374,6 +442,7 @@ class sfUser {
 	 */
 	public function getKey()
 	{
+		$this->loadPrivateData();
 		return $this->key;
 	}
 
@@ -386,11 +455,12 @@ class sfUser {
 	{
 		$sfUsers = sfCore::getClass('sfUsers');
 		do {
-			$key = fCryptography::randomString(128);
-		} while ( $sfUsers::keyExists() );
+			$key = fCryptography::randomString(64);
+		} while ( $sfUsers::keyExists($key) );
 
 		sfCore::$db->query("UPDATE `swoosh_users` SET `key`=%s WHERE `id`=%i",
 			$key, $this->id);
+		$this->key = $key;
 		return $key;
 	}
 
@@ -403,6 +473,7 @@ class sfUser {
 	 */
 	public function matchKey($key)
 	{
+		$this->loadPrivateData();
 		return $key == $this->key;
 	}
 
@@ -413,8 +484,15 @@ class sfUser {
 
 	public function setEmail($email_address)
 	{
+
+		$check = sfCore::$db->query("SELECT count(*) FROM `swoosh_users` WHERE `email`=%s LIMIT 1", $email_address);
+		if($check->fetchScalar() != 0){
+			throw new sfInvalidException(Array('email' => sfInvalidException::EXISTING));
+		}
+
 		sfCore::$db->query("UPDATE `swoosh_users` SET `email`=%s WHERE `id`=%i",
 			$email_address, $this->id);
+		$this->email = $email_address;
 	}
 
 
@@ -426,6 +504,7 @@ class sfUser {
 	 */
 	public function matchPassword($password)
 	{
+		$this->loadPrivateData();
 		return sfBcrypt::check($password, $this->password);
 	}
 
@@ -445,6 +524,27 @@ class sfUser {
 	public function __toString()
 	{
 		return $this->getId();
+	}
+
+	/**
+	 * Do diagnostics on this user's data to make sure all is intact.
+	 */
+	public function doDiagnostics()
+	{
+		$errors = Array();
+
+		$this->loadPrivateData();
+		if(empty($this->password)){
+			$errors['password'] = sfDiagnosticsException::MISSING;
+		}
+		if(empty($this->key)){
+			$errors['key'] = sfDiagnosticsException::MISSING;
+		}
+
+
+		if(!empty($errors)){
+			throw new sfDiagnosticsException($errors);
+		}
 	}
 
 }
