@@ -59,6 +59,59 @@ like how sfFileStorage automatically records the logged in user as the uploader.
 Therefore, invoking Swoosh is merely as simple as including the core file, and doing configuration
 commands. More on this later in complete documentation.
 
+## Example
+
+Swoosh is an "unframework" - it's all about giving you a foundation, not telling you to do it in
+some way.
+
+### A Blog
+
+To make the front page, you'd usually make it this way...
+
+```php
+ <?php
+ $posts = mysql_query("SELECT * FROM `blog_posts` LIMIT " . mysql_real_escape_string($_POST['page']).", 30");
+ foreach( // ...
+ ?>
+```
+
+In Swoosh:
+
+```php
+ <?php
+ sfBlog::getPosts($_POST['page']);
+ ?>
+```
+
+You can also...
+
+
+```php
+ <?php
+ // do searches!
+ $results = sfBlog::search($_POST['search']);
+ // get a single post!
+ $post = sfBlog::getSinglePost(56);
+ // get post from a slug!
+ $post = sfBlog::getPostFromSlug('banana');
+ // work with post objects!
+ $title = $post->getTitle();
+ $time = $post->getTimestamp();
+ // even comments!
+ $comments = $post->getComments();
+ // and work on those comments!
+ foreach($comments as $comment){
+ 	$comment_body = $comment->getBody();
+ }
+ // generate RSS!
+ $xml = sfBlog::generateRSS();
+ ?>
+```
+
+Swoosh classes also tie into each other. For example, sfBlog can have comments made by sfUsers entries,
+in which case they'll automatically hook up with that user's author data!
+
+
 ## Extending 
 
 Yes, **Swoosh allows you to modify each and every aspect of what it does**. You can mold it to do
@@ -96,4 +149,4 @@ is trying to contact sfBlog, it'll contact your class instead. This also works f
 classes, like sfBlogPost, so any classes making it will make your class, instead of Swoosh's.
 
 Extending Swoosh is easy, providing you know what function to extend and where it lies. Swoosh
-documentation is coming up soon!
+documentation is coming up soon - for now, there's a lot of documentation in the source!
