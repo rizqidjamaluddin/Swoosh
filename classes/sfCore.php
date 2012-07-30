@@ -84,6 +84,16 @@ class sfCore
 	 * This automatically generates an extended class if defined. Constructors should NOT
 	 * have any arguments; instead, use a load() method to load basic properties.
 	 * 
+	 * Example:
+	 * $newPost = sfCore::make('sfBlogPost');
+	 * $newPost->load($id); // access the sfBlogPost class members.
+	 * // this allows for...
+	 * class myBlogPost extends sfBlogPost {}
+	 * sfCore::extend('sfBlogPost', 'myBlogPost');
+	 * // so any other script can do this
+	 * $newPost = sfCore::make('sfBlogPost'); // will make a myBlogPost object instead
+	 * $newPost->load($id); // invoke myBlogPost::load, if defined
+	 * 
 	 * @param string $class 	The class to make, will load extension if set
 	 * @return mixed 			The created object
 	 */
@@ -100,6 +110,19 @@ class sfCore
 	 * wants to refer to another, it should use this instead of an explicit call. This allows
 	 * users to extend behavior, and any calling classes would use those extensions instead.
 	 * 
+	 * Example:
+	 * $sfUsers = sfCore::getClass('sfUsers')[]
+	 * $sfUsers->fetchUser($id); // access sfUsers class members
+	 * // this allows for...
+	 * class myUserSystem extends sfUsers {}
+	 * sfCore::extend('sfUsers', 'myUserSystem');
+	 * // and thus, any other script that invokes this...
+	 * $sfUsers = sfCore::getClass('sfUsers');
+	 * $sfUsers->fetchUser($id); // ... will be calling myUserSystem::fetchUser instead!
+	 * 
+	 * This means myUserSystem can replace any functionality normally done through sfUsers, even
+	 * calls from other scripts and within Swoosh.
+	 * 
 	 * @param string $class 	The static class to get
 	 * @return string 			The class name
 	 */
@@ -110,6 +133,7 @@ class sfCore
 }
 
 require_once('sfExceptions.php');
+require_once('sfSecurity.php');
 require_once('sfUsers.php');
 require_once('sfBlog.php');
 require_once('sfPageCache.php');
