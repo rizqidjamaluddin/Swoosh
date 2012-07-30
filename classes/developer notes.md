@@ -26,3 +26,9 @@ need unescaping at all:
   be thrown back into date()
 - Floats.
 - Integers.
+
+# Flourish Quirks
+
+## fCache
+
+- At least for the database type, fCache::add does *not* update the ttl.
