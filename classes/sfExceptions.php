@@ -47,4 +47,6 @@ class sfBycryptException extends sfAuthorizationException {}
 
 class sfNotFoundException extends fNotFoundException{}
 
+class sfThrottleException extends sfExpectedException{}
+
 ?>
