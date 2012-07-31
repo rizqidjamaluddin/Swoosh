@@ -138,6 +138,11 @@ class myCustomPost extends sfBlogPost {
 	}
 }
 sfCore::extend('sfBlogPost', 'myCustomPost');
+
+// everywhere in Swoosh will now use your class instead!
+$post = sfBlog::getPostFromSlug('2012-vacation');
+$tags = $post->getTags();
+
 ?>
 ```
 
