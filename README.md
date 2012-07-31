@@ -111,6 +111,39 @@ You can also...
 Swoosh classes also tie into each other. For example, sfBlog can have comments made by sfUsers entries,
 in which case they'll automatically hook up with that user's author data!
 
+Note that **Swoosh is careful not to sacrifice performance for flexibility**. It doesn't have everything
+built-in, and it doesn't try to be super-flexible at the cost for complexity. For example, blog posts
+only have a title, (single) category, timestamp, author, post body, and an array of comments. I felt
+that few enough use cases ever needed the old concepts of "tags", so I threw those out. 
+
+Instead, since Swoosh is for developers, it's built with the idea that *developers can implement
+changes on their own.* I conidered having some sort of "meta" field for blog posts, where you could
+insert arbitrary field names and field values for pretty much any extra metadata, but that would just
+make that column an ugly, unsearchable, unmaintainable, counter-productive hunk of data.
+
+So if you want to, say, implement tags...
+
+```php
+<?php
+class myCustomPost extends sfBlogPost {
+	public static setTags($tag_array){
+		foreach($tag_array as $tag){
+			// this uses the database Swoosh uses, it's a normal flourish fDatabase object.
+			// of course, this is just an example. You'd want to remove any existing tags first.
+			$insert = sfCore::$db->query("INSERT INTO `my_tags` (`parent`, `tag`) VALUES (%s, %s)", $this->id, $tag);
+		}
+	}
+	public static getTags(){
+		// etc etc
+	}
+}
+sfCore::extend('sfBlogPost', 'myCustomPost');
+?>
+```
+
+
+Which leads me to... 
+
 
 ## Extending 
 
