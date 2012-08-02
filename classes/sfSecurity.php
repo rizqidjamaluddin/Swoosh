@@ -47,7 +47,7 @@ class sfSecurity
 			static::setDefaultThrottleCache();
 		}
 		$check = static::$throttle_cache->get($event, NULL);
-		if(isset($check){
+		if(isset($check)){
 			throw new sfThrottleException($check);
 		}
 		static::$throttle_cache->set($event, time(), $ttl);
@@ -66,7 +66,7 @@ class sfSecurity
 
 	public static function setDefaultThrottleCache()
 	{
-		static:$throttle_cache = new fCache('database', sfCore::$db, array(
+		static::$throttle_cache = new fCache('database', sfCore::$db, array(
 			'table' => 'swoosh_security_throttle',
 			'key_column' => 'event',
 			'value_column' => 'flag',
