@@ -74,13 +74,14 @@ class sfDbVersioning {
 		foreach($versions as $version)
 		{
 			$filename = $version->getName(true);
+			// only execute if no history of this file was found
 			if(!in_array($filename, $registered_versions)){
 				$sql = $version->getContents();
 				try{
 					// attempt to execute SQL as requested
 					sfCore::$db->query($sql);
 					// log execution
-					sfCore::$db->query("INSERT INTO `swoo`");
+					sfCore::$db->query("INSERT INTO `swoosh_db_versioning_history` (`version`, `timetsamp`) VALUES (%s, %i)", $filename, time());
 				}catch(Exception $e){
 					// TODO: catch exceptions
 					sfCore::$db->query("UPDATE `swoosh_db_versioning_meta` WHERE `key`='last_exception_version' SET `value`=%s LIMIT 1", $filename);
