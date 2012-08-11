@@ -126,14 +126,14 @@ So if you want to, say, implement tags...
 ```php
 <?php
 class myCustomPost extends sfBlogPost {
-	public static setTags($tag_array){
+	public static function setTags($tag_array){
 		foreach($tag_array as $tag){
 			// this uses the database Swoosh uses, it's a normal flourish fDatabase object.
 			// of course, this is just an example. You'd want to remove any existing tags first.
 			$insert = sfCore::$db->query("INSERT INTO `my_tags` (`parent`, `tag`) VALUES (%s, %s)", $this->id, $tag);
 		}
 	}
-	public static getTags(){
+	public static function getTags(){
 		// etc etc
 	}
 }
