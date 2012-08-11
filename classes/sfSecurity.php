@@ -39,7 +39,8 @@ class sfSecurity
 	 * 
 	 * @param string $event 			Event identifier
 	 * @param integer $ttl 				Seconds to throttle
-	 * @throws sfThrottleException 		If event occurs under throttle limit
+	 * @throws sfThrottleException 		If event occurs under throttle limit. Will contain the
+	 * 									additional details about the call.
 	 */
 	public static function throttle($event, $ttl)
 	{

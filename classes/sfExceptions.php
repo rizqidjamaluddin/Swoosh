@@ -47,6 +47,28 @@ class sfBycryptException extends sfAuthorizationException {}
 
 class sfNotFoundException extends fNotFoundException{}
 
-class sfThrottleException extends sfExpectedException{}
+class sfThrottleException extends sfExpectedException{
+	
+	public $last_call;
+	public $ttl;
+
+	public function __construct($last_call, $ttl){
+		$this->last_call = $last_call;
+		$this->ttl = $ttl;
+		$this->message = "This action can only be called in " . (time() - ($last_call + $ttl)) . ' seconds from now.';
+	}
+
+	public function getLastCall(){
+		return $this->last_call;
+	}
+
+	public function getNextCall(){
+		return $this->last_call + $ttl;
+	}
+
+	public function getTTL(){
+		return $this->ttl;
+	}
+}
 
 ?>
