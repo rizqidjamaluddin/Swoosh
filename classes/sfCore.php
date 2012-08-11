@@ -130,12 +130,45 @@ class sfCore
 	{
 		return self::$classes[$class];
 	}
+
+	/**
+	 * Validate a set of variables, throwing a completed sfInvalidException if any issues are
+	 * caught.
+	 * 
+	 * $data takes the form of an Array, in which each item is another Array containing details
+	 * of a particular variable.
+	 * 
+	 * Example:
+	 * sfCore::validate(Array(
+	 * 	Array('data' => $myInt, 'test' => 'maxmin', 'required' => false, 'max' => 200, 'min' => 5),
+	 * 	Array('data' => $myString, 'test' => 'maxminlen', 'required' => true, 'max' => 10, 'min' => 10)		
+	 * ));
+	 * 
+	 * This will throw an sfInvalidException object containing all errors if those two variables
+	 * do not fit their requirements.
+	 * 
+	 * List of tests:
+	 * - maxmin: Check an integer to see if it fits a range (inclusive, so max 20 will accept 20).
+	 * 				Accepts a 'max' and 'min' field. Will throw TOO_LONG or TOO_SHORT.
+	 * - maxminlen: Check a string to see if it fits a length range (inclusive, so max 3 will accept
+	 * 				'foo'). Accepts a 'max' and 'min' field. Will throw TOO_LONG or TOO_SHORT.
+	 * - exist: Check if this value matches another value, and throws an EXISTING error if it does.
+	 * 				Accepts a 'match' field to compare against.
+	 * 
+	 * All tests also accept a 'required' field, which defaults to false. This throws a REQUIRED
+	 * error if the test fails.
+	 *
+	 */
+	public static function validate($data){
+
+	}
 }
 
 require_once('sfExceptions.php');
 require_once('sfSecurity.php');
 require_once('sfUsers.php');
 require_once('sfBlog.php');
+require_once('sfPages.php');
 require_once('sfPageCache.php');
 require_once('sfBcrypt.php');
 
