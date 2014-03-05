@@ -1,6 +1,12 @@
 Swoosh
 ======
 
+## Project abandoned
+
+**I have shifted my attention to other projects; my main framework of choice these days is [Laravel](http://laravel.com).**
+
+-
+
 A PHP un-framework for developers who like doing things their way, built on Flourish.
 
 Please note that Swoosh is currently in pre-pre-alpha. I don't even guarantee that it will run at
